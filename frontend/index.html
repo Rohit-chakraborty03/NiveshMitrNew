@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NiveshMitr - Login</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 50px; text-align: center; }
+        .auth-container { border: 1px solid #ccc; padding: 20px; max-width: 400px; margin: 0 auto; border-radius: 8px; }
+        input, button { padding: 10px; margin: 10px 0; width: 90%; }
+        #otp-section { display: none; } /* Hidden until OTP is sent */
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1>NiveshMitr Login</h1>
+        <p>Start your paper trading journey</p>
+
+        <div id="email-section">
+            <input type="email" id="email-input" placeholder="Enter your email" required>
+            <button id="send-otp-btn">Send OTP</button>
+        </div>
+
+        <div id="otp-section">
+            <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" required>
+            <button id="verify-otp-btn">Verify OTP & Login</button>
+        </div>
+
+        <hr>
+        <p>OR</p>
+
+        <button id="google-login-btn">Login with Google</button>
+    </div>
+
+    <script type="module" src="./js/auth.js"></script>
+
+</body>
+</html>

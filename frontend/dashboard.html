@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NiveshMitr - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #1a237e; --secondary: #2e7d32; --danger: #c62828; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 25px; position: fixed; box-sizing: border-box; }
+        .sidebar h2 { margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+        .user-info { font-size: 0.9em; margin-bottom: 40px; color: #cbd5e0; }
+        .nav-btn { width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 6px; cursor: pointer; text-align: left; margin-bottom: 10px; transition: 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* Main Area */
+        .main { margin-left: 260px; padding: 40px; width: calc(100% - 260px); box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        
+        /* Elements */
+        .balance { font-size: 36px; color: var(--secondary); font-weight: bold; margin: 10px 0; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 140px; margin-right: 10px; }
+        .btn-trade { padding: 12px 24px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .buy { background: var(--secondary); color: white; }
+        .buy:hover { background: #1b5e20; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 0.85em; text-transform: uppercase; }
+        td { padding: 15px 12px; border-bottom: 1px solid #edf2f7; font-weight: 500; }
+        .sell-btn { background: #fee2e2; color: var(--danger); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>NiveshMitr</h2>
+        <div class="user-info">
+            Logged in as:<br><b id="user-email">...</b>
+        </div>
+        <button class="nav-btn" onclick="window.location.reload()">Refresh Data</button>
+        <button class="nav-btn" style="margin-top: auto; color: #ff8a80;" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <span style="color: #64748b; font-weight: 600;">Available Virtual Cash</span>
+            <div id="wallet-balance" class="balance">₹0.00</div>
+            <p style="margin: 0; font-size: 0.85em; color: #94a3b8;">*Starting balance was ₹1,000,000</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Buy New Asset</h3>
+                <div style="display: flex; align-items: center;">
+                    <input type="text" id="symbol" placeholder="e.g. RELIANCE.NS">
+                    <input type="number" id="quantity" placeholder="Qty" min="1">
+                    <button class="btn-trade buy" onclick="handleTrade('buy')">Execute Buy</button>
+                </div>
+                <p style="color: #64748b; font-size: 0.8em; margin-top: 10px;">Note: Use .NS for Indian stocks (Yahoo Finance format).</p>
+            </div>
+
+            <div class="card">
+                <h3>Asset Allocation</h3>
+                <div style="height: 180px; display: flex; justify-content: center;">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Current Holdings</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Quantity</th>
+                        <th>Avg. Cost</th>
+                        <th>Total Value</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="holdings-table">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 1. YOUR FIREBASE CONFIG (Copy exactly from index.html)
+        const firebaseConfig = {
+          apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
+  authDomain: "nivesh-2dff0.firebaseapp.com",
+  projectId: "nivesh-2dff0",
+  storageBucket: "nivesh-2dff0.firebasestorage.app",
+  messagingSenderId: "1098218411997",
+  appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834",
+  measurementId: "G-PEKDP4KZZQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // 2. Auth Guard: Ensure user is logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('user-email').innerText = user.email;
+                loadData(user.uid);
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // 3. Data Fetching Logic
+        async function loadData(uid) {
+            // Fetch Wallet
+            const userSnap = await getDoc(doc(db, "users", uid));
+            const cash = userSnap.data().cashBalance;
+            document.getElementById('wallet-balance').innerText = `₹${cash.toLocaleString('en-IN')}`;
+
+            // Fetch Holdings
+            const q = query(collection(db, "holdings"), where("userId", "==", uid));
+            const querySnap = await getDocs(q);
+            const table = document.getElementById('holdings-table');
+            table.innerHTML = "";
+            
+            let stockValue = 0;
+
+            querySnap.forEach((doc) => {
+                const h = doc.data();
+                const total = h.quantity * h.avgPrice;
+                stockValue += total;
+                table.innerHTML += `
+                    <tr>
+                        <td>${h.symbol}</td>
+                        <td>${h.quantity}</td>
+                        <td>₹${h.avgPrice.toFixed(2)}</td>
+                        <td>₹${total.toLocaleString('en-IN')}</td>
+                        <td><button class="sell-btn" onclick="window.handleTrade('sell', '${h.symbol}')">SELL</button></td>
+                    </tr>
+                `;
+            });
+
+            initChart(cash, stockValue);
+        }
+
+        // 4. API Trading Bridge
+        window.handleTrade = async (type, existingSymbol = null) => {
+            const sym = existingSymbol || document.getElementById('symbol').value.toUpperCase();
+            const qty = document.getElementById('quantity').value;
+            
+            if (!sym || !qty) return alert("Please enter both Symbol and Quantity!");
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.uid,
+                        symbol: sym,
+                        quantity: parseInt(qty)
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(`Success: ${data.message}`);
+                    location.reload();
+                } else {
+                    alert(`Trade Failed: ${data.detail}`);
+                }
+            } catch (err) {
+                alert("Error: Backend server is not running!");
+            }
+        };
+
+        // 5. Chart Visualization
+        function initChart(cash, stocks) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'Stocks'],
+                    datasets: [{
+                        data: [cash, stocks],
+                        backgroundColor: ['#4bc0c0', '#ff6384'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        window.logout = () => signOut(auth);
+    </script>
+</body>
+</html>
