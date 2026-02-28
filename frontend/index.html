@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-        // Initialize EmailJS
+        //here we are intializing emailjs
         emailjs.init("vsg98k7T7lRE0hSj-"); 
     </script>
 </head>
@@ -46,7 +46,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Import standard Email/Password auth for our behind-the-scenes trick
+        // Importing standard Email/Password auth for our behind-the-scenes trick
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -63,7 +63,7 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // Variables to hold the OTP state
+        // Variables for OTP
         let generatedOTP = "";
         let userEmail = "";
 
@@ -72,7 +72,7 @@
             if (user) window.location.href = "dashboard.html";
         });
 
-        // --- STEP 1: SEND OTP VIA EMAILJS ---
+        // Here we are sending data using emailJS
         document.getElementById('send-otp-btn').addEventListener('click', () => {
             userEmail = document.getElementById('email').value.trim();
             if (!userEmail) return alert("Please enter a valid email.");
@@ -81,14 +81,14 @@
             btn.innerText = "Sending...";
             btn.disabled = true;
 
-            // Generate a random 6-digit OTP
+            // Generating a random 6-digit OTP
             generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
             // EMAILJS CONFIGURATION
             const serviceID = "service_iw9xo6f";
             const templateID = "template_yavdxkr";
 
-            // CRITICAL FIX: The variable name here is now "otp_code" to match your EmailJS template
+            
             const templateParams = {
                 to_email: userEmail,
                 otp_code: generatedOTP 
@@ -96,7 +96,7 @@
 
             emailjs.send(serviceID, templateID, templateParams)
                 .then(() => {
-                    // Hide email input, show OTP input
+                    
                     document.getElementById('email-section').style.display = "none";
                     document.getElementById('otp-section').style.display = "block";
                     document.getElementById('display-email').innerText = userEmail;
@@ -109,7 +109,7 @@
                 });
         });
 
-        // --- STEP 2: VERIFY OTP AND LOGIN ---
+        // verifying login with OTP
         document.getElementById('verify-otp-btn').addEventListener('click', async () => {
             const enteredOTP = document.getElementById('otp').value.trim();
             const btn = document.getElementById('verify-otp-btn');
@@ -121,7 +121,7 @@
             btn.innerText = "Authenticating...";
             btn.disabled = true;
 
-            // HACKATHON TRICK: OTP is correct, so we log them into Firebase using a universal secure password
+            //If the OTP is correct we initialize a general password
             const universalPassword = "NiveshMitr@Hackathon2026!";
 
             try {
@@ -149,7 +149,7 @@
             }
         });
 
-        // --- GOOGLE LOGIN ---
+        // login with google
         document.getElementById('google-login-btn').addEventListener('click', async () => {
             try {
                 await signInWithPopup(auth, provider);
