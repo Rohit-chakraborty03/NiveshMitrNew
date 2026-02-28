@@ -54,11 +54,12 @@
                     <th>Symbol</th>
                     <th>Quantity</th>
                     <th>Avg Cost</th>
+                    <th>P&L (%)</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
+                <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
             </tbody>
         </table>
 
@@ -76,6 +77,10 @@
                 <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
             </tbody>
         </table>
+
+        <div style="text-align: center; margin-top: 50px; padding-bottom: 20px; color: #64748b; font-size: 0.85em; letter-spacing: 1px;">
+            Created by team: <strong style="color: var(--accent-teal);">CODE BLOODED</strong>
+        </div>
     </div>
 
     <script type="module">
@@ -111,7 +116,7 @@
         }
 
         const authTimeout = setTimeout(() => {
-            showDebug("Auth is taking too long. Make sure you opened this via Live Server and are logged in.");
+            showDebug("Auth is taking too long. Make sure you opened this via Live Server.");
             document.getElementById('wallet-balance').innerText = "Auth Timeout";
         }, 6000);
 
@@ -128,7 +133,7 @@
 
         async function loadDashboardData(uid) {
             try {
-                // Load Cash Balance
+                // --- 1. Load Cash Balance & Handle New Users ---
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
 
@@ -137,35 +142,81 @@
                     document.getElementById('wallet-balance').innerText = 
                         `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 } else {
-                    showDebug("Setting up your profile with ₹10,00,000 virtual cash...");
+                    // NEW: Strict Loop for Custom Starting Balance
+                    let startingAmount = 0;
+                    let isValid = false;
+
+                    while (!isValid) {
+                        let userInput = prompt("Welcome to NiveshMitr!\nHow much virtual cash do you want to start with? (Between ₹10 and ₹10,00,000)", "100000");
+                        
+                        // If they click 'Cancel'
+                        if (userInput === null) {
+                            alert("⚠️ You must enter a starting balance to set up your account.");
+                            continue; // Loops back to ask again
+                        }
+
+                        let parsed = parseFloat(userInput);
+                        
+                        // Check if it's a number AND within range
+                        if (!isNaN(parsed) && parsed >= 10 && parsed <= 1000000) {
+                            startingAmount = parsed;
+                            isValid = true; // Breaks the loop and continues
+                        } else {
+                            alert("❌ Invalid amount! Please enter a number strictly between ₹10 and ₹10,00,000.");
+                        }
+                    }
+
+                    showDebug(`Setting up your profile with ₹${startingAmount.toLocaleString('en-IN')} virtual cash...`);
                     await setDoc(userRef, {
                         email: auth.currentUser.email || "",
-                        cashBalance: 1000000,
+                        cashBalance: startingAmount,
                         createdAt: new Date().toISOString()
                     });
-                    document.getElementById('wallet-balance').innerText = "₹10,00,000.00";
+                    document.getElementById('wallet-balance').innerText = `₹${startingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                     setTimeout(hideDebug, 3000);
                 }
 
-                // Load Stock Holdings
+                // --- 2. Load Stock Holdings & Calculate P&L ---
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
                 const stockBody = document.querySelector("#holdings-table tbody");
+                
                 if (stockSnap.empty) {
-                    stockBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">No holdings yet. Buy your first stock!</td></tr>`;
+                    stockBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No holdings yet. Buy your first stock!</td></tr>`;
                 } else {
                     stockBody.innerHTML = "";
-                    stockSnap.forEach(d => {
+                    stockSnap.docs.forEach(d => {
                         const data = d.data();
-                        stockBody.innerHTML += `<tr>
+                        const rowId = `row-${d.id}`;
+                        
+                        stockBody.innerHTML += `<tr id="${rowId}">
                             <td><strong>${data.symbol}</strong></td>
                             <td>${data.quantity}</td>
                             <td>₹${parseFloat(data.avgPrice).toFixed(2)}</td>
-                            <td><button style="color:#ff8a80; background:none; border:1px solid #ff8a80; padding:6px 12px; border-radius:6px; cursor:pointer;">Sell</button></td>
+                            <td class="pnl-cell" style="color:var(--text-muted); font-size: 0.9em;">Fetching live...</td>
+                            <td><button onclick="handleSell('${data.symbol}', ${data.quantity})" style="color:#ff8a80; background:rgba(255,138,128,0.1); border:1px solid #ff8a80; padding:6px 15px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.3s;">Sell</button></td>
                         </tr>`;
+
+                        // Fetch real-time price
+                        fetch(`${API_URL}/price/${data.symbol}`)
+                            .then(res => res.json())
+                            .then(priceData => {
+                                const curPrice = priceData.price;
+                                const avgPrice = data.avgPrice;
+                                const pnlPercent = ((curPrice - avgPrice) / avgPrice) * 100;
+                                
+                                const isProfit = pnlPercent >= 0;
+                                const color = isProfit ? '#20c997' : '#ff8a80'; 
+                                const sign = isProfit ? '+' : '';
+                                
+                                document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:${color}; font-weight:bold;">${sign}${pnlPercent.toFixed(2)}%</span>`;
+                            })
+                            .catch(() => {
+                                document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:var(--text-muted);">Error</span>`;
+                            });
                     });
                 }
 
-                // Load Fixed Deposits
+                // --- 3. Load Fixed Deposits ---
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
                 const fdBody = document.querySelector("#fd-table tbody");
                 if (fdSnap.empty) {
@@ -191,11 +242,13 @@
 
         function setBtn(id, loading, defaultText) {
             const btn = document.getElementById(id);
-            btn.disabled = loading;
-            btn.innerText = loading ? "Processing..." : defaultText;
+            if(btn) {
+                btn.disabled = loading;
+                btn.innerText = loading ? "Processing..." : defaultText;
+            }
         }
 
-        // Buy Stock / Mutual Fund Logic
+        // --- Buy Logic ---
         window.handleTrade = async (endpoint, type) => {
             const isMF = type === 'mf';
             const sym = document.getElementById(isMF ? 'mf-symbol' : 'symbol').value.trim().toUpperCase();
@@ -217,7 +270,7 @@
                     })
                 });
                 const data = await res.json();
-                alert(res.ok ? data.message : `❌ Error: ${data.detail}`);
+                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
                 if (res.ok) location.reload();
             } catch (err) {
                 alert("❌ Cannot connect to backend.\n\nMake sure your FastAPI server is running.");
@@ -225,7 +278,35 @@
             setBtn(btnId, false, defaultText);
         };
 
-        // Open Fixed Deposit Logic
+        // --- Sell Logic ---
+        window.handleSell = async (symbol, maxQty) => {
+            const qtyToSell = prompt(`You own ${maxQty} shares of ${symbol}.\nHow many shares do you want to sell?`, maxQty);
+            
+            if (!qtyToSell || isNaN(qtyToSell) || parseInt(qtyToSell) <= 0) return;
+            
+            if (parseInt(qtyToSell) > maxQty) {
+                return alert(`❌ You cannot sell more shares than you own! You only have ${maxQty}.`);
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/sell`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: auth.currentUser.uid,
+                        symbol: symbol,
+                        quantity: parseInt(qtyToSell)
+                    })
+                });
+                const data = await res.json();
+                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
+                if (res.ok) location.reload();
+            } catch (err) {
+                alert("❌ Cannot connect to backend. Ensure main.py is running!");
+            }
+        };
+
+        // --- FD Logic ---
         window.handleFD = async () => {
             const amt = document.getElementById('fd-amount').value.trim();
             const months = document.getElementById('fd-months').value.trim();
@@ -245,7 +326,7 @@
                     })
                 });
                 const data = await res.json();
-                alert(res.ok ? data.message : `❌ Error: ${data.detail}`);
+                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
                 if (res.ok) location.reload();
             } catch (err) {
                 alert("❌ Cannot connect to backend.\n\nMake sure your FastAPI server is running.");
@@ -253,7 +334,7 @@
             setBtn('create-fd-btn', false, 'Open FD');
         };
 
-        // Logout
+        // --- Logout ---
         window.logout = async () => {
             await signOut(auth);
             window.location.href = "index.html";
