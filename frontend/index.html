@@ -4,37 +4,159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiveshMitr - Login</title>
+    <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 50px; text-align: center; }
-        .auth-container { border: 1px solid #ccc; padding: 20px; max-width: 400px; margin: 0 auto; border-radius: 8px; }
-        input, button { padding: 10px; margin: 10px 0; width: 90%; }
-        #otp-section { display: none; } /* Hidden until OTP is sent */
-    </style>
+    <script type="text/javascript">
+        // Initialize EmailJS
+        emailjs.init("vsg98k7T7lRE0hSj-"); 
+    </script>
 </head>
 <body>
 
-    <div class="auth-container">
-        <h1>NiveshMitr Login</h1>
+    <div class="login-card">
+        <h2>NiveshMitr Login</h2>
         <p>Start your paper trading journey</p>
-
+        
         <div id="email-section">
-            <input type="email" id="email-input" placeholder="Enter your email" required>
-            <button id="send-otp-btn">Send OTP</button>
+            <input type="email" id="email" placeholder="Enter your email" required>
+            <button class="btn-primary" id="send-otp-btn">Send OTP</button>
         </div>
 
-        <div id="otp-section">
-            <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" required>
-            <button id="verify-otp-btn">Verify OTP & Login</button>
+        <div id="otp-section" style="display: none;">
+            <p style="color: #20c997; font-size: 0.9em; margin-top: -15px; margin-bottom: 15px;">
+                ✅ OTP sent to <span id="display-email" style="color: white; font-weight: bold;"></span>
+            </p>
+            <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" required>
+            <button class="btn-primary" id="verify-otp-btn">Verify & Login</button>
+            <button style="background:none; color:var(--text-muted); margin-top:10px; font-size:0.85em;" onclick="location.reload()">Back</button>
         </div>
-
-        <hr>
-        <p>OR</p>
-
-        <button id="google-login-btn">Login with Google</button>
+        
+        <div class="divider">OR</div>
+        
+        <button class="btn-google" id="google-login-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Login with Google
+        </button>
     </div>
 
-    <script type="module" src="./js/auth.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        // Import standard Email/Password auth for our behind-the-scenes trick
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
+            authDomain: "nivesh-2dff0.firebaseapp.com",
+            projectId: "nivesh-2dff0",
+            storageBucket: "nivesh-2dff0.firebasestorage.app",
+            messagingSenderId: "1098218411997",
+            appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834",
+            measurementId: "G-PEKDP4KZZQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Variables to hold the OTP state
+        let generatedOTP = "";
+        let userEmail = "";
+
+        // Auto-Redirect if logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) window.location.href = "dashboard.html";
+        });
+
+        // --- STEP 1: SEND OTP VIA EMAILJS ---
+        document.getElementById('send-otp-btn').addEventListener('click', () => {
+            userEmail = document.getElementById('email').value.trim();
+            if (!userEmail) return alert("Please enter a valid email.");
+
+            const btn = document.getElementById('send-otp-btn');
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            // Generate a random 6-digit OTP
+            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // EMAILJS CONFIGURATION
+            const serviceID = "service_iw9xo6f";
+            const templateID = "template_yavdxkr";
+
+            // CRITICAL FIX: The variable name here is now "otp_code" to match your EmailJS template
+            const templateParams = {
+                to_email: userEmail,
+                otp_code: generatedOTP 
+            };
+
+            emailjs.send(serviceID, templateID, templateParams)
+                .then(() => {
+                    // Hide email input, show OTP input
+                    document.getElementById('email-section').style.display = "none";
+                    document.getElementById('otp-section').style.display = "block";
+                    document.getElementById('display-email').innerText = userEmail;
+                })
+                .catch((err) => {
+                    alert("Failed to send OTP. Check console for EmailJS errors.");
+                    console.error("EmailJS Error:", err);
+                    btn.innerText = "Send OTP";
+                    btn.disabled = false;
+                });
+        });
+
+        // --- STEP 2: VERIFY OTP AND LOGIN ---
+        document.getElementById('verify-otp-btn').addEventListener('click', async () => {
+            const enteredOTP = document.getElementById('otp').value.trim();
+            const btn = document.getElementById('verify-otp-btn');
+
+            if (enteredOTP !== generatedOTP) {
+                return alert("❌ Incorrect OTP. Please try again.");
+            }
+
+            btn.innerText = "Authenticating...";
+            btn.disabled = true;
+
+            // HACKATHON TRICK: OTP is correct, so we log them into Firebase using a universal secure password
+            const universalPassword = "NiveshMitr@Hackathon2026!";
+
+            try {
+                // Try to log them in if they already have an account
+                await signInWithEmailAndPassword(auth, userEmail, universalPassword);
+            } catch (error) {
+                // If account doesn't exist, create it on the spot
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, userEmail, universalPassword);
+                    } catch (createError) {
+                        if(createError.code === 'auth/email-already-in-use') {
+                            alert("This email is already linked to a Google account. Please use 'Login with Google'.");
+                        } else {
+                            alert(`Error creating account: ${createError.message}`);
+                        }
+                        btn.innerText = "Verify & Login";
+                        btn.disabled = false;
+                    }
+                } else {
+                    alert(`Error: ${error.message}`);
+                    btn.innerText = "Verify & Login";
+                    btn.disabled = false;
+                }
+            }
+        });
+
+        // --- GOOGLE LOGIN ---
+        document.getElementById('google-login-btn').addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                alert(`Login Failed: ${error.message}`);
+            }
+        });
+    </script>
 </body>
 </html>

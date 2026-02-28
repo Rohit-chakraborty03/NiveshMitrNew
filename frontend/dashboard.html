@@ -4,51 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiveshMitr - Dashboard</title>
-    <style>
-        :root { --primary: #1a237e; --secondary: #2e7d32; --accent: #f39c12; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; }
-        .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 25px; position: fixed; box-sizing: border-box; }
-        .main { margin-left: 260px; padding: 40px; width: calc(100% - 260px); box-sizing: border-box; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .balance { font-size: 32px; color: var(--secondary); font-weight: bold; margin-top: 10px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
-        .btn-trade { padding: 10px 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; width: 100%; transition: 0.3s; font-size: 1em; }
-        .buy { background: var(--secondary); }
-        .mf-btn { background: #0288d1; }
-        .fd-btn { background: var(--accent); }
-        .btn-trade:disabled { opacity: 0.6; cursor: not-allowed; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 8px; overflow: hidden; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 0.85em; }
-        td { padding: 12px; border-bottom: 1px solid #edf2f7; font-size: 0.9em; }
-        .section-header { border-left: 5px solid var(--primary); padding-left: 15px; margin: 40px 0 20px 0; color: var(--primary); }
-        #debug-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 0.85em; color: #856404; display: none; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="sidebar">
         <h2>NiveshMitr</h2>
         <p id="user-email" style="font-size: 0.8em; color: #cbd5e0; margin-bottom: 30px;">Loading user...</p>
-        <button onclick="location.reload()" style="width:100%; padding:10px; cursor:pointer; background:rgba(255,255,255,0.1); border:none; color:white; border-radius:5px; margin-bottom:10px;">Refresh Dashboard</button>
-        <button onclick="logout()" style="width:100%; padding:10px; cursor:pointer; background:rgba(255,0,0,0.3); border:none; color:white; border-radius:5px;">Logout</button>
+        <button class="btn-trade" onclick="location.reload()" style="background:rgba(255,255,255,0.1); margin-bottom:10px;">Refresh Dashboard</button>
+        <button class="btn-trade" onclick="logout()" style="background:rgba(255,0,0,0.3); color:#ff8a80;">Logout</button>
     </div>
 
     <div class="main">
-        <!-- Shows only if there is a problem -->
         <div id="debug-box">
             <strong>⚠️ Status:</strong> <span id="debug-msg">Checking...</span>
         </div>
 
         <div class="card" style="margin-bottom: 30px;">
-            <span style="color: #64748b; font-weight: 600;">Available Virtual Cash</span>
+            <span style="font-weight: 600;">Portfolio Summary (Available Cash)</span>
             <div id="wallet-balance" class="balance">Loading...</div>
         </div>
 
         <div class="grid">
             <div class="card">
                 <h3>Stocks (Real-time)</h3>
-                <input type="text" id="symbol" placeholder="e.g. TCS.NS">
-                <input type="number" id="quantity" placeholder="Qty" min="1">
+                <input type="text" id="symbol" placeholder="e.g. RELIANCE.NS">
+                <input type="number" id="quantity" placeholder="Quantity" min="1">
                 <button class="btn-trade buy" id="buy-stock-btn" onclick="handleTrade('buy', 'stock')">Buy Stock</button>
             </div>
 
@@ -60,23 +40,41 @@
             </div>
 
             <div class="card">
-                <h3>Fixed Deposit</h3>
-                <input type="number" id="fd-amount" placeholder="Amount" min="1">
-                <input type="number" id="fd-months" placeholder="Months" min="1">
-                <button class="btn-trade fd-btn" id="create-fd-btn" onclick="handleFD()">Open FD (7%)</button>
+                <h3>Fixed Deposit (7% p.a.)</h3>
+                <input type="number" id="fd-amount" placeholder="Amount (₹)" min="1">
+                <input type="number" id="fd-months" placeholder="Duration (Months)" min="1">
+                <button class="btn-trade fd-btn" id="create-fd-btn" onclick="handleFD()">Open FD</button>
             </div>
         </div>
 
-        <h3 class="section-header">Your Holdings</h3>
+        <h3 class="section-header">Your Stock Holdings</h3>
         <table id="holdings-table">
-            <thead><tr><th>Symbol</th><th>Quantity</th><th>Avg Cost</th><th>Action</th></tr></thead>
-            <tbody><tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Quantity</th>
+                    <th>Avg Cost</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
+            </tbody>
         </table>
 
         <h3 class="section-header">Active Fixed Deposits</h3>
         <table id="fd-table">
-            <thead><tr><th>Amount</th><th>Duration</th><th>Rate</th><th>Status</th></tr></thead>
-            <tbody><tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Duration</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
+            </tbody>
         </table>
     </div>
 
@@ -85,8 +83,7 @@
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ── No api.js import needed — all fetch logic is inline below ──
-
+        // Your specific Firebase credentials
         const firebaseConfig = {
             apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
             authDomain: "nivesh-2dff0.firebaseapp.com",
@@ -113,18 +110,15 @@
             document.getElementById('debug-box').style.display = 'none';
         }
 
-        // If auth takes more than 6 seconds, show a helpful message
         const authTimeout = setTimeout(() => {
-            showDebug("Auth is taking too long. Make sure you opened this via Live Server (not file://) and are logged in.");
+            showDebug("Auth is taking too long. Make sure you opened this via Live Server and are logged in.");
             document.getElementById('wallet-balance').innerText = "Auth Timeout";
-            document.querySelector("#holdings-table tbody").innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Auth timed out</td></tr>`;
-            document.querySelector("#fd-table tbody").innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Auth timed out</td></tr>`;
         }, 6000);
 
         onAuthStateChanged(auth, async (user) => {
             clearTimeout(authTimeout);
             if (user) {
-                document.getElementById('user-email').innerText = user.email || "OTP User";
+                document.getElementById('user-email').innerText = user.email || "User Logged In";
                 await loadDashboardData(user.uid);
             } else {
                 showDebug("Not logged in. Redirecting to login...");
@@ -134,16 +128,15 @@
 
         async function loadDashboardData(uid) {
             try {
-                // ── Load Cash Balance ──
+                // Load Cash Balance
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
 
                 if (userSnap.exists()) {
                     const balance = userSnap.data().cashBalance ?? 0;
-                    document.getElementById('wallet-balance').innerText =
+                    document.getElementById('wallet-balance').innerText = 
                         `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 } else {
-                    // First time — auto create profile
                     showDebug("Setting up your profile with ₹10,00,000 virtual cash...");
                     await setDoc(userRef, {
                         email: auth.currentUser.email || "",
@@ -154,7 +147,7 @@
                     setTimeout(hideDebug, 3000);
                 }
 
-                // ── Load Stock Holdings ──
+                // Load Stock Holdings
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
                 const stockBody = document.querySelector("#holdings-table tbody");
                 if (stockSnap.empty) {
@@ -167,12 +160,12 @@
                             <td><strong>${data.symbol}</strong></td>
                             <td>${data.quantity}</td>
                             <td>₹${parseFloat(data.avgPrice).toFixed(2)}</td>
-                            <td><button style="color:red; background:none; border:1px solid red; padding:4px 10px; border-radius:4px; cursor:pointer;">Sell</button></td>
+                            <td><button style="color:#ff8a80; background:none; border:1px solid #ff8a80; padding:6px 12px; border-radius:6px; cursor:pointer;">Sell</button></td>
                         </tr>`;
                     });
                 }
 
-                // ── Load Fixed Deposits ──
+                // Load Fixed Deposits
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
                 const fdBody = document.querySelector("#fd-table tbody");
                 if (fdSnap.empty) {
@@ -185,27 +178,24 @@
                             <td>₹${parseFloat(data.amount).toLocaleString('en-IN')}</td>
                             <td>${data.durationMonths} Months</td>
                             <td>${((data.rate ?? 0.07) * 100).toFixed(0)}%</td>
-                            <td><span style="color:green; font-weight:bold;">${data.status}</span></td>
+                            <td><span style="color:#20c997; font-weight:bold;">${data.status}</span></td>
                         </tr>`;
                     });
                 }
 
             } catch (err) {
-                showDebug(`Error: ${err.message} — Check Firestore security rules and internet connection.`);
+                showDebug(`Database Error: ${err.message}`);
                 document.getElementById('wallet-balance').innerText = "Error loading data";
-                document.querySelector("#holdings-table tbody").innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">${err.message}</td></tr>`;
-                document.querySelector("#fd-table tbody").innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">${err.message}</td></tr>`;
             }
         }
 
-        // ── Button loading helper ──
         function setBtn(id, loading, defaultText) {
             const btn = document.getElementById(id);
             btn.disabled = loading;
             btn.innerText = loading ? "Processing..." : defaultText;
         }
 
-        // ── Buy Stock / Mutual Fund ──
+        // Buy Stock / Mutual Fund Logic
         window.handleTrade = async (endpoint, type) => {
             const isMF = type === 'mf';
             const sym = document.getElementById(isMF ? 'mf-symbol' : 'symbol').value.trim().toUpperCase();
@@ -230,12 +220,12 @@
                 alert(res.ok ? data.message : `❌ Error: ${data.detail}`);
                 if (res.ok) location.reload();
             } catch (err) {
-                alert("❌ Cannot connect to backend.\n\nRun this in your terminal:\n  uvicorn main:app --reload");
+                alert("❌ Cannot connect to backend.\n\nMake sure your FastAPI server is running.");
             }
             setBtn(btnId, false, defaultText);
         };
 
-        // ── Open Fixed Deposit ──
+        // Open Fixed Deposit Logic
         window.handleFD = async () => {
             const amt = document.getElementById('fd-amount').value.trim();
             const months = document.getElementById('fd-months').value.trim();
@@ -243,7 +233,7 @@
             if (!amt || !months || parseFloat(amt) <= 0 || parseInt(months) <= 0)
                 return alert("Please enter a valid amount and duration.");
 
-            setBtn('create-fd-btn', true, 'Open FD (7%)');
+            setBtn('create-fd-btn', true, 'Open FD');
             try {
                 const res = await fetch(`${API_URL}/create_fd`, {
                     method: 'POST',
@@ -258,12 +248,12 @@
                 alert(res.ok ? data.message : `❌ Error: ${data.detail}`);
                 if (res.ok) location.reload();
             } catch (err) {
-                alert("❌ Cannot connect to backend.\n\nRun this in your terminal:\n  uvicorn main:app --reload");
+                alert("❌ Cannot connect to backend.\n\nMake sure your FastAPI server is running.");
             }
-            setBtn('create-fd-btn', false, 'Open FD (7%)');
+            setBtn('create-fd-btn', false, 'Open FD');
         };
 
-        // ── Logout ──
+        // Logout
         window.logout = async () => {
             await signOut(auth);
             window.location.href = "index.html";
