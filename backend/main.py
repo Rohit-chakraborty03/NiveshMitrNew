@@ -1,24 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import routes  # This imports the trading logic from your routes.py file
+import routes  # This connects to your trading logic in routes.py
 
-# 1. Initialize the FastAPI app
-app = FastAPI(title="NiveshMitr API", description="Paper Trading Backend for Diversion 2k26")
+app = FastAPI()
 
-# 2. Setup CORS (Cross-Origin Resource Sharing)
-# This is required so your frontend (running on Live Server) isn't blocked by the browser when talking to this backend.
+# --- STEP 1: ADD CORS MIDDLEWARE ---
+# This tells your backend to allow requests from your frontend (Port 5501)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (perfect for hackathon local testing)
+    allow_origins=["*"],  # Permits all origins for the hackathon
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permits all methods (POST, GET, etc.)
+    allow_headers=["*"],  # Permits all headers
 )
 
-# 3. Connect the buy/sell endpoints from routes.py
+# --- STEP 2: INCLUDE YOUR ROUTES ---
 app.include_router(routes.router)
 
-# 4. A simple root endpoint to check if the server is alive
+# --- STEP 3: HEALTH CHECK ---
 @app.get("/")
-def read_root():
-    return {"message": "NiveshMitr Backend is running perfectly!"}
+async def root():
+    return {"message": "NiveshMitr Backend is Online!"}
