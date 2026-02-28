@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. Firebase Configuration (Replace with your actual keys from Firebase Console)
+// 2. Firebase Configuration 
 const firebaseConfig = {
     apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
   authDomain: "nivesh-2dff0.firebaseapp.com",
@@ -19,10 +19,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 4. Initialize EmailJS (Replace with your public key)
+// 4. Initialize EmailJS 
 emailjs.init("vsg98k7T7lRE0hSj-");
 
-// 5. Connect UI Elements
+// 5. Connecting UI Elements
 const emailInput = document.getElementById("email-input");
 const sendOtpBtn = document.getElementById("send-otp-btn");
 const otpSection = document.getElementById("otp-section");
@@ -30,7 +30,7 @@ const otpInput = document.getElementById("otp-input");
 const verifyOtpBtn = document.getElementById("verify-otp-btn");
 const googleLoginBtn = document.getElementById("google-login-btn");
 
-// --- GOOGLE LOGIN LOGIC ---
+//GOOGLE LOGIN LOGIC
 const provider = new GoogleAuthProvider();
 
 googleLoginBtn.addEventListener("click", async () => {
@@ -44,7 +44,7 @@ googleLoginBtn.addEventListener("click", async () => {
     }
 });
 
-// --- EMAIL + OTP LOGIC ---
+//EMAIL + OTP
 sendOtpBtn.addEventListener("click", () => {
     const email = emailInput.value;
     if (!email) {
@@ -52,14 +52,14 @@ sendOtpBtn.addEventListener("click", () => {
         return;
     }
 
-    // Generate a random 6-digit OTP
+    // Generating a random 6-digit OTP
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Save to the browser's temporary storage securely
+    // Storing it to browsers temporary storage
     sessionStorage.setItem("secure_otp", generatedOtp);
     sessionStorage.setItem("user_email", email);
 
-    // Send Email via EmailJS (Replace Service ID and Template ID)
+    // Sending Email via EmailJS (Replace Service ID and Template ID)
     emailjs.send("service_iw9xo6f", "template_yavdxkr", {
         to_email: email,
         otp_code: generatedOtp,
