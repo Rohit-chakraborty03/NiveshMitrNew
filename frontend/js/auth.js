@@ -1,28 +1,35 @@
 // 1. Import Firebase from CDNs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. Firebase Configuration 
+// 2. Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
-  authDomain: "nivesh-2dff0.firebaseapp.com",
-  projectId: "nivesh-2dff0",
-  storageBucket: "nivesh-2dff0.firebasestorage.app",
-  messagingSenderId: "1098218411997",
-  appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834",
-  measurementId: "G-PEKDP4KZZQ"
+    authDomain: "nivesh-2dff0.firebaseapp.com",
+    projectId: "nivesh-2dff0",
+    storageBucket: "nivesh-2dff0.firebasestorage.app",
+    messagingSenderId: "1098218411997",
+    appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834",
+    measurementId: "G-PEKDP4KZZQ"
 };
 
-// 3. Initialize Firebase & Services
+// 3. Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 4. Initialize EmailJS 
+// 4. Initialize EmailJS
 emailjs.init("vsg98k7T7lRE0hSj-");
 
-// 5. Connecting UI Elements
+// 5. UI Elements
 const emailInput = document.getElementById("email-input");
 const sendOtpBtn = document.getElementById("send-otp-btn");
 const otpSection = document.getElementById("otp-section");
@@ -30,86 +37,101 @@ const otpInput = document.getElementById("otp-input");
 const verifyOtpBtn = document.getElementById("verify-otp-btn");
 const googleLoginBtn = document.getElementById("google-login-btn");
 
-//GOOGLE LOGIN LOGIC
+// ─── GOOGLE LOGIN ───────────────────────────────────────────────
 const provider = new GoogleAuthProvider();
 
 googleLoginBtn.addEventListener("click", async () => {
     try {
         const result = await signInWithPopup(auth, provider);
         await setupUserInFirestore(result.user.uid, result.user.email);
-        window.location.href = "dashboard.html"; // Send to dashboard on success
+        window.location.href = "dashboard.html";
     } catch (error) {
         console.error("Google Login Error:", error);
-        alert("Google Login failed. Check console.");
+        alert("Google Login failed: " + error.message);
     }
 });
 
-//EMAIL + OTP
+// ─── OTP SEND ───────────────────────────────────────────────────
 sendOtpBtn.addEventListener("click", () => {
-    const email = emailInput.value;
-    if (!email) {
-        alert("Please enter an email!");
-        return;
-    }
+    const email = emailInput.value.trim();
+    if (!email) return alert("Please enter your email!");
 
-    // Generating a random 6-digit OTP
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Storing it to browsers temporary storage
+
+    // Store OTP and email temporarily
     sessionStorage.setItem("secure_otp", generatedOtp);
     sessionStorage.setItem("user_email", email);
 
-    // Sending Email via EmailJS (Replace Service ID and Template ID)
     emailjs.send("service_iw9xo6f", "template_yavdxkr", {
         to_email: email,
         otp_code: generatedOtp,
     }).then(() => {
         alert("OTP sent successfully!");
         document.getElementById("email-section").style.display = "none";
-        otpSection.style.display = "block"; // Show the OTP input box
+        otpSection.style.display = "block";
     }).catch((error) => {
         console.error("EmailJS Error:", error);
-        alert("Failed to send OTP.");
+        alert("Failed to send OTP. Check EmailJS configuration.");
     });
 });
 
+// ─── OTP VERIFY ─────────────────────────────────────────────────
+// FIX: Instead of signInAnonymously (which creates a NEW uid every time),
+// we use Firebase Email/Password auth with a fixed dummy password.
+// This gives the user a PERMANENT, consistent UID tied to their email.
 verifyOtpBtn.addEventListener("click", async () => {
-    const enteredOtp = otpInput.value;
+    const enteredOtp = otpInput.value.trim();
     const storedOtp = sessionStorage.getItem("secure_otp");
     const userEmail = sessionStorage.getItem("user_email");
 
-    if (enteredOtp === storedOtp) {
+    if (enteredOtp !== storedOtp) {
+        return alert("Invalid OTP. Please try again.");
+    }
+
+    // We use a fixed internal password (user never sees this — OTP is their real auth)
+    const internalPassword = "NiveshMitr@" + userEmail.split("@")[0] + "_2024";
+
+    try {
+        let userCredential;
+
+        // Try to sign in first (returning user)
         try {
-            // Login anonymously to Firebase to get a secure UID
-            const result = await signInAnonymously(auth);
-            
-            // Link the email to the UID and give them ₹1,000,000
-            await setupUserInFirestore(result.user.uid, userEmail);
-            
-            sessionStorage.removeItem("secure_otp"); // Clean up for security
-            window.location.href = "dashboard.html"; // Send to dashboard on success
-        } catch (error) {
-            console.error("Auth Error:", error);
+            userCredential = await signInWithEmailAndPassword(auth, userEmail, internalPassword);
+            console.log("Existing user signed in.");
+        } catch (signInError) {
+            // If sign-in fails, the user is new — create their account
+            if (signInError.code === "auth/user-not-found" || signInError.code === "auth/invalid-credential" || signInError.code === "auth/invalid-email") {
+                userCredential = await createUserWithEmailAndPassword(auth, userEmail, internalPassword);
+                console.log("New user account created.");
+            } else {
+                throw signInError;
+            }
         }
-    } else {
-        alert("Invalid OTP. Please try again.");
+
+        await setupUserInFirestore(userCredential.user.uid, userEmail);
+        sessionStorage.removeItem("secure_otp");
+        sessionStorage.removeItem("user_email");
+        window.location.href = "dashboard.html";
+
+    } catch (error) {
+        console.error("Auth Error:", error);
+        alert("Login failed: " + error.message);
     }
 });
 
-// --- HELPER FUNCTION: DATABASE SETUP ---
-// This checks if the user is new. If yes, it creates their document and adds the starting balance.
+// ─── HELPER: CREATE USER IN FIRESTORE IF NEW ────────────────────
 async function setupUserInFirestore(uid, email) {
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (!userSnap.exists()) {
         await setDoc(userRef, {
             email: email,
             cashBalance: 1000000,
-            createdAt: new Date()
+            createdAt: new Date().toISOString()
         });
-        console.log("New account created! ₹1,000,000 added to wallet.");
+        console.log("New profile created! ₹10,00,000 added to wallet.");
     } else {
-        console.log("Existing user logged in.");
+        console.log("Welcome back,", email);
     }
 }

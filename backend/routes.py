@@ -1,17 +1,25 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import yfinance as yf
-from database import db
-import time
-import random
+import requests
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 router = APIRouter()
 
-# --- Data Models (Schemas) ---
+# 1. Safely Initialize Firebase directly here to avoid connection hangs
+if not firebase_admin._apps:
+    try:
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print("Firebase Init Error:", e)
 
+db = firestore.client()
+
+# 2. Models
 class TradeRequest(BaseModel):
     user_id: str
-    symbol: str  # e.g., "TCS.NS"
+    symbol: str
     quantity: int
 
 class FDRequest(BaseModel):
@@ -19,147 +27,113 @@ class FDRequest(BaseModel):
     amount: float
     duration_months: int
 
-# --- 1. STOCKS: BUY LOGIC ---
+# 3. Helper Functions (Removed 'async' to prevent server freeze)
+def get_stock_price(symbol: str) -> float:
+    try:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"Could not find stock '{symbol}'. Try adding .NS (e.g. TCS.NS)")
+        data = response.json()
+        price = data["chart"]["result"][0]["meta"]["regularMarketPrice"]
+        if not price or price <= 0:
+            raise HTTPException(status_code=400, detail=f"Invalid price for '{symbol}'")
+        return float(price)
+    except requests.Timeout:
+        raise HTTPException(status_code=408, detail="Stock price fetch timed out. Check your internet connection.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching price for '{symbol}': {str(e)}")
 
-@router.post("/buy")
-async def buy_stock(req: TradeRequest):
-    # Fetch live market price via yfinance
-    ticker = yf.Ticker(req.symbol)
-    todays_data = ticker.history(period='1d')
-    if todays_data.empty:
-        raise HTTPException(status_code=404, detail="Stock symbol not found")
-    
-    current_price = todays_data['Close'].iloc[0]
-    total_cost = current_price * req.quantity
-
-    # Check the user's wallet in Firestore
-    user_ref = db.collection('users').document(req.user_id)
-    user_doc = user_ref.get()
-    
+def get_user_balance(user_id: str):
+    user_ref = db.collection("users").document(user_id)
+    user_doc = user_ref.get()  # This blocking call is now safe because we removed async
     if not user_doc.exists:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user_data = user_doc.to_dict()
-    if user_data['cashBalance'] < total_cost:
-        raise HTTPException(status_code=400, detail="Insufficient funds in wallet")
+        raise HTTPException(status_code=404, detail="User not found. Please log out and log in again.")
+    return user_ref, user_doc.to_dict().get("cashBalance", 0)
 
-    # Deduct money & Update holdings
-    new_balance = user_data['cashBalance'] - total_cost
-    user_ref.update({'cashBalance': new_balance})
+# 4. Routes
+@router.get("/ping")
+def ping():
+    return {"status": "Backend is running"}
 
-    holding_id = f"{req.user_id}_{req.symbol}"
-    holding_ref = db.collection('holdings').document(holding_id)
-    holding_doc = holding_ref.get()
+@router.get("/price/{symbol}")
+def get_price(symbol: str):
+    price = get_stock_price(symbol)
+    return {"symbol": symbol, "price": price}
 
-    if holding_doc.exists:
-        # Re-calculate average price for existing holding
-        old_data = holding_doc.to_dict()
-        new_qty = old_data['quantity'] + req.quantity
-        new_avg = ((old_data['avgPrice'] * old_data['quantity']) + total_cost) / new_qty
-        holding_ref.update({'quantity': new_qty, 'avgPrice': new_avg})
-    else:
-        # Create new holding record
-        holding_ref.set({
-            'userId': req.user_id, 'symbol': req.symbol, 
-            'quantity': req.quantity, 'avgPrice': current_price
-        })
-
-    # Log transaction for history
-    db.collection('transactions').add({
-        'userId': req.user_id, 'type': 'BUY', 'asset': req.symbol,
-        'quantity': req.quantity, 'price': current_price, 'timestamp': time.time()
-    })
-
-    return {"message": f"Successfully bought {req.quantity} shares of {req.symbol}", "new_balance": new_balance}
-
-# --- 2. STOCKS: SELL LOGIC ---
-
-@router.post("/sell")
-async def sell_stock(req: TradeRequest):
-    ticker = yf.Ticker(req.symbol)
-    todays_data = ticker.history(period='1d')
-    if todays_data.empty:
-        raise HTTPException(status_code=404, detail="Stock symbol not found")
-    
-    current_price = todays_data['Close'].iloc[0]
-    total_revenue = current_price * req.quantity
-
-    holding_id = f"{req.user_id}_{req.symbol}"
-    holding_ref = db.collection('holdings').document(holding_id)
-    holding_doc = holding_ref.get()
-
-    if not holding_doc.exists or holding_doc.to_dict()['quantity'] < req.quantity:
-        raise HTTPException(status_code=400, detail="Not enough shares to sell")
-
-    # Update Wallet Balance
-    user_ref = db.collection('users').document(req.user_id)
-    user_data = user_ref.get().to_dict()
-    new_balance = user_data['cashBalance'] + total_revenue
-    user_ref.update({'cashBalance': new_balance})
-
-    # Update or Delete holding
-    old_qty = holding_doc.to_dict()['quantity']
-    if old_qty == req.quantity:
-        holding_ref.delete()
-    else:
-        holding_ref.update({'quantity': old_qty - req.quantity})
-
-    db.collection('transactions').add({
-        'userId': req.user_id, 'type': 'SELL', 'asset': req.symbol,
-        'quantity': req.quantity, 'price': current_price, 'timestamp': time.time()
-    })
-
-    return {"message": f"Successfully sold {req.quantity} shares of {req.symbol}", "new_balance": new_balance}
-
-# --- 3. MUTUAL FUNDS: EOD SIMULATION ---
-
-@router.post("/buy_mf")
-async def buy_mutual_fund(req: TradeRequest):
-    # Simulate Net Asset Value (NAV) with a random variation
-    base_nav = 150.0 
-    current_nav = base_nav + random.uniform(-2.0, 5.0) 
-    total_cost = current_nav * req.quantity
-    
-    user_ref = db.collection('users').document(req.user_id)
-    user_data = user_ref.get().to_dict()
-    
-    if user_data['cashBalance'] < total_cost:
-        raise HTTPException(status_code=400, detail="Insufficient funds for Mutual Fund")
-    
-    user_ref.update({'cashBalance': user_data['cashBalance'] - total_cost})
-    
-    # Store in a separate Mutual Funds collection
-    db.collection('mutual_funds').add({
-        'userId': req.user_id,
-        'fundName': req.symbol,
-        'units': req.quantity,
-        'navAtPurchase': current_nav,
-        'timestamp': time.time()
-    })
-    
-    return {"message": f"Invested in {req.symbol}", "nav": current_nav}
-
-# --- 4. FIXED DEPOSITS: SIMPLE INTEREST SIMULATION ---
-
-@router.post("/create_fd")
-async def create_fd(req: FDRequest):
-    interest_rate = 0.07 # 7% Annual Interest
-    
-    user_ref = db.collection('users').document(req.user_id)
-    user_data = user_ref.get().to_dict()
-    
-    if user_data['cashBalance'] < req.amount:
-        raise HTTPException(status_code=400, detail="Insufficient funds to open FD")
+# CRITICAL FIX: Changed from 'async def' to 'def'
+@router.post("/buy")
+def buy_stock(req: TradeRequest):
+    try:
+        price = get_stock_price(req.symbol)
+        total_cost = price * req.quantity
+        user_ref, current_balance = get_user_balance(req.user_id)
         
-    user_ref.update({'cashBalance': user_data['cashBalance'] - req.amount})
-    
-    db.collection('fixed_deposits').add({
-        'userId': req.user_id,
-        'amount': req.amount,
-        'rate': interest_rate,
-        'startDate': time.time(),
-        'durationMonths': req.duration_months,
-        'status': 'ACTIVE'
-    })
-    
-    return {"message": f"FD of ₹{req.amount} created successfully at {interest_rate*100}% interest"}
+        if current_balance < total_cost:
+            raise HTTPException(status_code=400, detail=f"Insufficient balance. Need Rs.{total_cost:,.2f} but you have Rs.{current_balance:,.2f}")
+            
+        user_ref.update({"cashBalance": current_balance - total_cost})
+        db.collection("holdings").add({
+            "userId": req.user_id,
+            "symbol": req.symbol,
+            "quantity": req.quantity,
+            "avgPrice": price,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+        return {"message": f"Bought {req.quantity} shares of {req.symbol} at Rs.{price:,.2f}! Total: Rs.{total_cost:,.2f}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# CRITICAL FIX: Changed from 'async def' to 'def'
+@router.post("/buy_mf")
+def buy_mf(req: TradeRequest):
+    try:
+        nav = 150.0
+        total_cost = nav * req.quantity
+        user_ref, current_balance = get_user_balance(req.user_id)
+        
+        if current_balance < total_cost:
+            raise HTTPException(status_code=400, detail=f"Insufficient balance. Need Rs.{total_cost:,.2f} but you have Rs.{current_balance:,.2f}")
+            
+        user_ref.update({"cashBalance": current_balance - total_cost})
+        db.collection("mutual_funds").add({
+            "userId": req.user_id,
+            "fundName": req.symbol,
+            "units": req.quantity,
+            "navAtPurchase": nav,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+        return {"message": f"Invested {req.quantity} units in {req.symbol} at NAV Rs.{nav}! Total: Rs.{total_cost:,.2f}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# CRITICAL FIX: Changed from 'async def' to 'def'
+@router.post("/create_fd")
+def create_fd(req: FDRequest):
+    try:
+        user_ref, current_balance = get_user_balance(req.user_id)
+        
+        if current_balance < req.amount:
+            raise HTTPException(status_code=400, detail=f"Insufficient balance. Need Rs.{req.amount:,.2f} but you have Rs.{current_balance:,.2f}")
+            
+        user_ref.update({"cashBalance": current_balance - req.amount})
+        db.collection("fixed_deposits").add({
+            "userId": req.user_id,
+            "amount": req.amount,
+            "durationMonths": req.duration_months,
+            "rate": 0.07,
+            "status": "Active",
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+        return {"message": f"FD of Rs.{req.amount:,.2f} for {req.duration_months} months created at 7% p.a.!"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
