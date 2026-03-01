@@ -31,6 +31,10 @@
     </div>
 
     <div class="container">
+
+        <div style="background-color: #e6f4ea; color: #1e8e3e; padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; text-align: center; border: 1px solid #cce8d6;">
+            <strong>⏱️ Real-Time Market Data:</strong> This website uses real-time stock values that are auto-updated every 10 seconds.
+        </div>
         
         <div class="card" style="margin-bottom: 20px; background-color: var(--learning-bg); border-left: 4px solid var(--learning-border);">
             <h3 style="margin-top: 0; color: var(--accent-blue);">📚 Student Learning Center</h3>
@@ -59,9 +63,29 @@
         <div class="grid">
             <div class="card">
                 <h3>Buy Stocks</h3>
-                <input type="text" id="symbol" class="input-box" style="width: 90%;" placeholder="Ticker (e.g. RELIANCE.NS)">
+                <input list="stock-options" id="symbol" class="input-box" style="width: 90%;" placeholder="Search Ticker (e.g. RELIANCE.NS)">
+                <datalist id="stock-options">
+                    <option value="RELIANCE.NS">Reliance Industries</option>
+                    <option value="TCS.NS">Tata Consultancy Services</option>
+                    <option value="HDFCBANK.NS">HDFC Bank</option>
+                    <option value="INFY.NS">Infosys</option>
+                    <option value="ICICIBANK.NS">ICICI Bank</option>
+                    <option value="TATAMOTORS.NS">Tata Motors</option>
+                    <option value="ZOMATO.NS">Zomato Ltd.</option>
+                    <option value="JIOFIN.NS">Jio Financial Services</option>
+                </datalist>
+
                 <input type="number" id="quantity" class="input-box" style="width: 90%;" placeholder="Quantity" min="1">
-                <button class="btn-black" id="buy-stock-btn" style="width: 100%;" onclick="handleTrade('buy', 'stock')">Buy Stock</button>
+                <button class="btn-black" id="buy-stock-btn" style="width: 100%; margin-bottom: 10px;" onclick="handleTrade('buy', 'stock')">Buy Stock</button>
+
+                <div style="margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 8px 0; font-weight: bold;">🔥 Top Picks:</p>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button style="font-size: 11px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; background: transparent; color: var(--text-main);" onclick="document.getElementById('symbol').value='RELIANCE.NS'">RELIANCE</button>
+                        <button style="font-size: 11px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; background: transparent; color: var(--text-main);" onclick="document.getElementById('symbol').value='TATAMOTORS.NS'">TATA MOTORS</button>
+                        <button style="font-size: 11px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; background: transparent; color: var(--text-main);" onclick="document.getElementById('symbol').value='ZOMATO.NS'">ZOMATO</button>
+                    </div>
+                </div>
             </div>
 
             <div class="card">
@@ -121,11 +145,10 @@
             <tbody><tr><td colspan="5" align="center">Loading...</td></tr></tbody>
         </table>
 
-        <p style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 12px;">Created by Team: <strong>CODE BLOODED</strong></p>
+        <p style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 14px; font-weight: bold;">Created By: CODE BLOODED</p>
     </div>
 
     <script type="module">
-        //toggle text on load.
         document.getElementById('theme-btn').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -198,9 +221,8 @@
                     await setDoc(userRef, { email: auth.currentUser.email || "", cashBalance: startingAmount, createdAt: new Date().toISOString() });
                     document.getElementById('wallet-balance').innerText = `₹${startingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {}
 
-            // Stocks Table
             const stockBody = document.querySelector("#holdings-table tbody");
             try {
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
@@ -220,7 +242,6 @@
                 }
             } catch (err) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // F/O Table
             const foBody = document.querySelector("#fo-table tbody");
             try {
                 const foSnap = await getDocs(query(collection(db, "fo_holdings"), where("userId", "==", uid)));
@@ -241,7 +262,6 @@
                 }
             } catch (err) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // Mutual Funds Table
             const mfBody = document.querySelector("#mf-table tbody");
             try {
                 const mfSnap = await getDocs(query(collection(db, "mutual_funds"), where("userId", "==", uid)));
@@ -264,7 +284,6 @@
                 }
             } catch (err) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // Deposits Table
             const fdBody = document.querySelector("#fd-table tbody");
             try {
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
@@ -295,12 +314,12 @@
                         const el = document.getElementById(`live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            let pnlHTML = `<span style="color:${pnl>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
                             if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('stock')">❓ Why?</button>`;
                             document.getElementById(`pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("Fetch error"));
+                    }).catch(e => {});
                 });
 
                 globalMFDocs.forEach(d => {
@@ -312,12 +331,12 @@
                         const el = document.getElementById(`mf-live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            let pnlHTML = `<span style="color:${pnl>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
                             if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('mf')">❓ Why?</button>`;
                             document.getElementById(`mf-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("Fetch error"));
+                    }).catch(e => {});
                 });
 
                 globalFODocs.forEach(d => {
@@ -330,12 +349,12 @@
                         const el = document.getElementById(`fo-live-${d.id}`);
                         if(el) {
                             el.innerText = p.price.toFixed(2);
-                            let pnlHTML = `<span style="color:${pnlRs>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
+                            let pnlHTML = `<span style="color:${pnlRs>=0?'green':'red'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
                             if(pnlRs < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('fo')">❓ Why?</button>`;
                             document.getElementById(`fo-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("Fetch error"));
+                    }).catch(e => {});
                 });
             };
             
@@ -343,7 +362,6 @@
             liveUpdateInterval = setInterval(fetchLivePrices, 10000);
         }
 
-        // Loss alert popup.
         window.showLossReason = (type) => {
             if (type === 'stock') {
                 alert("📉 STOCK LOSS ANALYSIS:\n\nYou are losing money because the current market price is lower than what you paid for it. This usually happens when more people are selling the stock than buying it, possibly due to bad news about the company, poor quarterly earnings, or a general market crash.");
@@ -369,7 +387,7 @@
             try {
                 const res = await fetch(`${API_URL}/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, quantity: parseInt(qty) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error."); }
+            } catch (err) {}
             setBtn(btnId, false, defaultText);
         };
 
@@ -379,7 +397,7 @@
             try {
                 const res = await fetch(`${API_URL}/sell`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qty) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error"); }
+            } catch (err) {}
         };
 
         window.handleSellMF = async (symbol, maxQty) => {
@@ -388,7 +406,7 @@
             try {
                 const res = await fetch(`${API_URL}/sell_mf`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qty) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error"); }
+            } catch (err) {}
         };
 
         window.handleFOTrade = async () => {
@@ -400,7 +418,7 @@
             try {
                 const res = await fetch(`${API_URL}/buy_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, option_type: type, lots: parseInt(lots) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error"); }
+            } catch (err) {}
             setBtn('buy-fo-btn', false, "Buy Contract");
         };
 
@@ -409,7 +427,7 @@
             try {
                 const res = await fetch(`${API_URL}/close_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, option_type: type, lots: 0 }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error"); }
+            } catch (err) {}
         };
 
         window.handleFD = async () => {
@@ -420,7 +438,7 @@
             try {
                 const res = await fetch(`${API_URL}/create_fd`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, amount: parseFloat(amt), duration_months: parseInt(months) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error"); }
+            } catch (err) {}
             setBtn('create-fd-btn', false, 'Open FD');
         };
 
