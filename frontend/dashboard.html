@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiveshMitr - Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Extra styles for the learning section */
+        details {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+            color: #0056b3;
+        }
+        details p {
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .why-btn {
+            background: #ffeeba;
+            border: 1px solid #ffdf7e;
+            color: #856404;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        .why-btn:hover { background: #ffdf7e; }
+    </style>
 </head>
 <body class="dashboard-body">
 
@@ -19,6 +53,28 @@
 
     <div class="container">
         
+        <div class="card" style="margin-bottom: 20px; background-color: #f8fbff; border-left: 4px solid #0056b3;">
+            <h3 style="margin-top: 0; color: #0056b3;">📚 Student Learning Center</h3>
+            
+            <details>
+                <summary>📈 What are Stocks?</summary>
+                <p><strong>Definition:</strong> A stock represents a tiny fraction of ownership in a real company (like Tata or Reliance).<br>
+                <strong>How it works:</strong> If you buy 10 shares of a company, you own a small piece of it. If the company does well, makes profits, and grows, other people will want to buy those shares, pushing the price up. You make money by selling your shares at that higher price!</p>
+            </details>
+
+            <details>
+                <summary>🧺 What are Mutual Funds?</summary>
+                <p><strong>Definition:</strong> A mutual fund is like a basket of many different stocks. Instead of picking 50 companies yourself, an expert manager pools money from thousands of people and buys the basket for everyone.<br>
+                <strong>How it works:</strong> You buy "Units" of this basket. It is much safer than buying a single stock because if one company fails, the other 49 in the basket can still grow and protect your money. It's the best way for students to start investing.</p>
+            </details>
+
+            <details>
+                <summary>⚡ What is F&O (Futures & Options) Trading?</summary>
+                <p><strong>Definition:</strong> F&O are advanced contracts where you bet on which direction the market will go by a certain date, without actually buying the stocks.<br>
+                <strong>How it works:</strong> If you think Nifty 50 will go UP, you buy a <b>Call (CE)</b>. If you think it will go DOWN, you buy a <b>Put (PE)</b>. Because you are only paying a small premium (margin) to control a large amount of money (lots), your profits can be massive—but your losses can wipe out your entire capital in minutes. It is very risky!</p>
+            </details>
+        </div>
+
         <div class="balance-box">
             <p style="margin: 0; color: #666; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Available Virtual Cash</p>
             <h1 id="wallet-balance" style="margin: 10px 0; font-size: 42px;">Loading...</h1>
@@ -67,33 +123,25 @@
 
         <h3>Your Stock Holdings</h3>
         <table id="holdings-table">
-            <thead>
-                <tr><th>Symbol</th><th>Qty</th><th>Avg Cost</th><th>Live Price</th><th>P&L</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Symbol</th><th>Qty</th><th>Avg Cost</th><th>Live Price</th><th>P&L</th><th>Action</th></tr></thead>
             <tbody><tr><td colspan="6" align="center">Loading...</td></tr></tbody>
         </table>
 
         <h3>Your F/O Positions</h3>
         <table id="fo-table">
-            <thead>
-                <tr><th>Index</th><th>Type</th><th>Lots</th><th>Entry Index</th><th>Live Index</th><th>P&L (₹)</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Index</th><th>Type</th><th>Lots</th><th>Entry Index</th><th>Live Index</th><th>P&L (₹)</th><th>Action</th></tr></thead>
             <tbody><tr><td colspan="7" align="center">Loading...</td></tr></tbody>
         </table>
 
         <h3>Your Mutual Funds</h3>
         <table id="mf-table">
-            <thead>
-                <tr><th>Fund Name</th><th>Units</th><th>Avg NAV</th><th>Live NAV</th><th>P&L</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Fund Name</th><th>Units</th><th>Avg NAV</th><th>Live NAV</th><th>P&L</th><th>Action</th></tr></thead>
             <tbody><tr><td colspan="6" align="center">Loading...</td></tr></tbody>
         </table>
 
         <h3>Active Fixed Deposits</h3>
         <table id="fd-table">
-            <thead>
-                <tr><th>Amount</th><th>Duration</th><th>Rate</th><th>Maturity Value</th><th>Status</th></tr>
-            </thead>
+            <thead><tr><th>Amount</th><th>Duration</th><th>Rate</th><th>Maturity Value</th><th>Status</th></tr></thead>
             <tbody><tr><td colspan="5" align="center">Loading...</td></tr></tbody>
         </table>
 
@@ -149,15 +197,13 @@
                 document.getElementById('user-email').innerText = user.email || "Logged In";
                 loadMFDropdown(); 
                 await loadDashboardData(user.uid);
-            } else { 
-                setTimeout(() => { window.location.href = "index.html"; }, 1000); 
-            }
+            } else { setTimeout(() => { window.location.href = "index.html"; }, 1000); }
         });
 
         async function loadDashboardData(uid) {
             if(liveUpdateInterval) clearInterval(liveUpdateInterval);
 
-            // --- 1. Load Initial Balance ---
+            // 1. Balance
             try {
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
@@ -174,9 +220,9 @@
                     await setDoc(userRef, { email: auth.currentUser.email || "", cashBalance: startingAmount, createdAt: new Date().toISOString() });
                     document.getElementById('wallet-balance').innerText = `₹${startingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                 }
-            } catch (err) { console.error("Balance Error:", err); }
+            } catch (err) { console.error(err); }
 
-            // --- 2. Load Stocks Table (Isolated) ---
+            // 2. Stocks
             const stockBody = document.querySelector("#holdings-table tbody");
             try {
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
@@ -194,11 +240,9 @@
                         </tr>`;
                     });
                 }
-            } catch (err) { 
-                stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
-            }
+            } catch (err) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // --- 3. Load F/O Table (Isolated) ---
+            // 3. F/O
             const foBody = document.querySelector("#fo-table tbody");
             try {
                 const foSnap = await getDocs(query(collection(db, "fo_holdings"), where("userId", "==", uid)));
@@ -217,11 +261,9 @@
                         </tr>`;
                     });
                 }
-            } catch (err) { 
-                foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
-            }
+            } catch (err) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // --- 4. Load Mutual Funds Table (Isolated) ---
+            // 4. Mutual Funds
             const mfBody = document.querySelector("#mf-table tbody");
             try {
                 const mfSnap = await getDocs(query(collection(db, "mutual_funds"), where("userId", "==", uid)));
@@ -242,11 +284,9 @@
                         </tr>`;
                     });
                 }
-            } catch (err) { 
-                mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
-            }
+            } catch (err) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // --- 5. Load FDs Table (Isolated) ---
+            // 5. Fixed Deposits
             const fdBody = document.querySelector("#fd-table tbody");
             try {
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
@@ -265,12 +305,9 @@
                         </tr>`;
                     });
                 }
-            } catch (err) { 
-                fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
-            }
+            } catch (err) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // --- 6. 10-Second Live Polling Engine ---
-            // Because the tables above are isolated, even if one fails, this WILL run!
+            // 6. Polling Engine with Interactive Education Buttons
             const fetchLivePrices = () => {
                 globalStockDocs.forEach(d => {
                     const data = d.data();
@@ -281,10 +318,12 @@
                         const el = document.getElementById(`live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            document.getElementById(`pnl-${d.id}`).innerHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('stock')">❓ Why?</button>`;
+                            document.getElementById(`pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("Stock fetch error"));
+                    }).catch(e => console.log("Fetch error"));
                 });
 
                 globalMFDocs.forEach(d => {
@@ -296,10 +335,12 @@
                         const el = document.getElementById(`mf-live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            document.getElementById(`mf-pnl-${d.id}`).innerHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('mf')">❓ Why?</button>`;
+                            document.getElementById(`mf-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("MF fetch error"));
+                    }).catch(e => console.log("Fetch error"));
                 });
 
                 globalFODocs.forEach(d => {
@@ -312,10 +353,12 @@
                         const el = document.getElementById(`fo-live-${d.id}`);
                         if(el) {
                             el.innerText = p.price.toFixed(2);
-                            document.getElementById(`fo-pnl-${d.id}`).innerHTML = `<span style="color:${pnlRs>=0?'green':'red'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
+                            let pnlHTML = `<span style="color:${pnlRs>=0?'green':'red'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
+                            if(pnlRs < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('fo')">❓ Why?</button>`;
+                            document.getElementById(`fo-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
                         }
-                    }).catch(e => console.log("FO fetch error"));
+                    }).catch(e => console.log("Fetch error"));
                 });
             };
             
@@ -323,7 +366,17 @@
             liveUpdateInterval = setInterval(fetchLivePrices, 10000);
         }
 
-        // --- BUTTON STATES & LOGIC ---
+        // --- NEW: EDUCATIONAL LOSS ANALYZER ---
+        window.showLossReason = (type) => {
+            if (type === 'stock') {
+                alert("📉 STOCK LOSS ANALYSIS:\n\nYou are losing money because the current market price is lower than what you paid for it. This usually happens when more people are selling the stock than buying it, possibly due to bad news about the company, poor quarterly earnings, or a general market crash.");
+            } else if (type === 'mf') {
+                alert("🧺 MUTUAL FUND LOSS ANALYSIS:\n\nYour Mutual Fund is down. Since a Mutual Fund holds dozens of different stocks, a loss means the broader market (like the Nifty 50) is experiencing a downturn. Don't panic! Mutual funds are designed for long-term growth and usually recover over time.");
+            } else if (type === 'fo') {
+                alert("⚡ F&O LOSS ANALYSIS:\n\nYou are losing money on this contract for two possible reasons:\n1. Wrong Direction: You bought a Call (CE) but the market fell, or a Put (PE) but the market rose.\n2. Theta Decay: Options lose a tiny bit of value every single day just because time is passing, even if the market doesn't move. This is why F&O is so dangerous for beginners!");
+            }
+        };
+
         function setBtn(id, loading, defaultText) {
             const btn = document.getElementById(id);
             if(btn) { btn.disabled = loading; btn.innerText = loading ? "Processing..." : defaultText; }
@@ -334,13 +387,12 @@
             const qty = document.getElementById(type === 'mf' ? 'mf-quantity' : 'quantity').value.trim();
             const btnId = type === 'mf' ? 'buy-mf-btn' : 'buy-stock-btn';
             const defaultText = type === 'mf' ? 'Invest in MF' : 'Buy Stock';
-            
             if (!sym || !qty) return alert("Please fill all fields.");
             setBtn(btnId, true, defaultText);
             try {
                 const res = await fetch(`${API_URL}/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, quantity: parseInt(qty) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
-            } catch (err) { alert("Backend Error. Make sure your Python server is running!"); }
+            } catch (err) { alert("Backend Error."); }
             setBtn(btnId, false, defaultText);
         };
 
@@ -367,17 +419,16 @@
             const type = document.getElementById('fo-type').value;
             const lots = document.getElementById('fo-lots').value;
             if (!lots || lots <= 0) return alert("Please enter valid lots.");
-            
-            setBtn('buy-fo-btn', true, "Buy Contract (₹5k/lot)");
+            setBtn('buy-fo-btn', true, "Buy Contract");
             try {
                 const res = await fetch(`${API_URL}/buy_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, option_type: type, lots: parseInt(lots) }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
             } catch (err) { alert("Backend Error"); }
-            setBtn('buy-fo-btn', false, "Buy Contract (₹5k/lot)");
+            setBtn('buy-fo-btn', false, "Buy Contract");
         };
 
         window.handleCloseFO = async (symbol, type) => {
-            if(!confirm(`Are you sure you want to close all ${type} positions for this index?`)) return;
+            if(!confirm(`Close all ${type} positions?`)) return;
             try {
                 const res = await fetch(`${API_URL}/close_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, option_type: type, lots: 0 }) });
                 if (res.ok) location.reload(); else alert((await res.json()).detail);
@@ -387,8 +438,7 @@
         window.handleFD = async () => {
             const amt = document.getElementById('fd-amount').value.trim();
             const months = document.getElementById('fd-months').value.trim();
-            if (!amt || !months) return alert("Please fill both amount and months.");
-
+            if (!amt || !months) return alert("Fill fields.");
             setBtn('create-fd-btn', true, 'Open FD');
             try {
                 const res = await fetch(`${API_URL}/create_fd`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, amount: parseFloat(amt), duration_months: parseInt(months) }) });
@@ -397,10 +447,7 @@
             setBtn('create-fd-btn', false, 'Open FD');
         };
 
-        window.logout = async () => { 
-            await signOut(auth); 
-            window.location.href = "index.html"; 
-        };
+        window.logout = async () => { await signOut(auth); window.location.href = "index.html"; };
     </script>
 </body>
 </html>
