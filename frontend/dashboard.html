@@ -5,122 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiveshMitr - Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Ensures the dropdown perfectly matches your text inputs */
-        select.styled-dropdown {
-            background-color: rgba(15, 23, 42, 0.6);
-            color: var(--text-main);
-            padding: 14px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            width: 100%;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.3s;
-            appearance: none;
-        }
-        select.styled-dropdown:focus {
-            border-color: var(--accent-teal);
-            box-shadow: 0 0 0 2px rgba(32, 201, 151, 0.2);
-            background-color: rgba(15, 23, 42, 0.8);
-        }
-    </style>
 </head>
-<body>
-    <div class="sidebar">
-        <h2>NiveshMitr</h2>
-        <p id="user-email" style="font-size: 0.8em; color: #cbd5e0; margin-bottom: 30px;">Loading user...</p>
-        <button class="btn-trade" onclick="location.reload()" style="background:rgba(255,255,255,0.1); margin-bottom:10px;">Refresh Dashboard</button>
-        <button class="btn-trade" onclick="logout()" style="background:rgba(255,0,0,0.3); color:#ff8a80;">Logout</button>
+<body class="dashboard-body">
+
+    <div class="navbar">
+        <h2 style="margin: 0; font-size: 24px;"><span class="logo-icon" style="font-size: 24px;">💠</span> NiveshMitr</h2>
+        <div class="nav-buttons">
+            <span id="user-email" style="font-size: 14px; color: #555; margin-right: 15px;">Loading...</span>
+            <button onclick="location.reload()">Refresh</button>
+            <button onclick="logout()" style="color: red; border-color: red;">Logout</button>
+        </div>
     </div>
 
-    <div class="main">
-        <div id="debug-box">
-            <strong>⚠️ Status:</strong> <span id="debug-msg">Checking...</span>
-        </div>
-
-        <div class="card" style="margin-bottom: 30px;">
-            <span style="font-weight: 600;">Portfolio Summary (Available Cash)</span>
-            <div id="wallet-balance" class="balance">Loading...</div>
+    <div class="container">
+        
+        <div class="balance-box">
+            <p style="margin: 0; color: #666; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Available Virtual Cash</p>
+            <h1 id="wallet-balance" style="margin: 10px 0; font-size: 42px;">Loading...</h1>
         </div>
 
         <div class="grid">
             <div class="card">
-                <h3>Stocks (Real-time)</h3>
-                <input type="text" id="symbol" placeholder="e.g. RELIANCE.NS">
-                <input type="number" id="quantity" placeholder="Quantity" min="1">
-                <button class="btn-trade buy" id="buy-stock-btn" onclick="handleTrade('buy', 'stock')">Buy Stock</button>
+                <h3>Buy Stocks</h3>
+                <input type="text" id="symbol" class="input-box" style="width: 90%;" placeholder="Ticker (e.g. RELIANCE.NS)">
+                <input type="number" id="quantity" class="input-box" style="width: 90%;" placeholder="Quantity" min="1">
+                <button class="btn-black" id="buy-stock-btn" style="width: 100%;" onclick="handleTrade('buy', 'stock')">Buy Stock</button>
+            </div>
+
+            <div class="card">
+                <h3>Futures & Options</h3>
+                <select id="fo-symbol" class="input-box" style="width: 95%;">
+                    <option value="^NSEI">NIFTY 50</option>
+                    <option value="^NSEBANK">BANK NIFTY</option>
+                </select><br>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="fo-type" class="input-box" style="width: 50%; margin-bottom: 0;">
+                        <option value="CE">Call (CE)</option>
+                        <option value="PE">Put (PE)</option>
+                    </select>
+                    <input type="number" id="fo-lots" class="input-box" style="width: 40%; margin-bottom: 0;" placeholder="Lots" min="1">
+                </div>
+                <button class="btn-black" id="buy-fo-btn" style="width: 100%;" onclick="handleFOTrade()">Buy Contract (₹5k/lot)</button>
             </div>
 
             <div class="card">
                 <h3>Mutual Funds</h3>
-                <select id="mf-symbol" class="styled-dropdown">
-                    <option value="" disabled selected>Loading live prices...</option>
+                <select id="mf-symbol" class="input-box" style="width: 95%;">
+                    <option value="" disabled selected>Loading...</option>
                 </select>
-                <input type="number" id="mf-quantity" placeholder="Units" min="1">
-                <button class="btn-trade mf-btn" id="buy-mf-btn" onclick="handleTrade('buy_mf', 'mf')">Invest in MF</button>
+                <input type="number" id="mf-quantity" class="input-box" style="width: 90%;" placeholder="Units" min="1">
+                <button class="btn-black" id="buy-mf-btn" style="width: 100%;" onclick="handleTrade('buy_mf', 'mf')">Invest in MF</button>
             </div>
-
+            
             <div class="card">
-                <h3>Fixed Deposit (7% p.a.)</h3>
-                <input type="number" id="fd-amount" placeholder="Amount (₹)" min="1">
-                <input type="number" id="fd-months" placeholder="Duration (Months)" min="1">
-                <button class="btn-trade fd-btn" id="create-fd-btn" onclick="handleFD()">Open FD</button>
+                <h3>Fixed Deposit (7%)</h3>
+                <input type="number" id="fd-amount" class="input-box" style="width: 90%;" placeholder="Amount (₹)" min="1">
+                <input type="number" id="fd-months" class="input-box" style="width: 90%;" placeholder="Months" min="1">
+                <button class="btn-black" id="create-fd-btn" style="width: 100%;" onclick="handleFD()">Open FD</button>
             </div>
         </div>
 
-        <h3 class="section-header">Your Stock Holdings</h3>
+        <h3>Your Stock Holdings</h3>
         <table id="holdings-table">
             <thead>
-                <tr>
-                    <th>Symbol</th>
-                    <th>Quantity</th>
-                    <th>Avg Cost</th>
-                    <th>P&L (%)</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Symbol</th><th>Qty</th><th>Avg Cost</th><th>Live Price</th><th>P&L</th><th>Action</th></tr>
             </thead>
-            <tbody>
-                <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
-            </tbody>
+            <tbody><tr><td colspan="6" align="center">Loading...</td></tr></tbody>
         </table>
 
-        <h3 class="section-header">Your Mutual Fund Holdings</h3>
+        <h3>Your F/O Positions</h3>
+        <table id="fo-table">
+            <thead>
+                <tr><th>Index</th><th>Type</th><th>Lots</th><th>Entry Index</th><th>Live Index</th><th>P&L (₹)</th><th>Action</th></tr>
+            </thead>
+            <tbody><tr><td colspan="7" align="center">Loading...</td></tr></tbody>
+        </table>
+
+        <h3>Your Mutual Funds</h3>
         <table id="mf-table">
             <thead>
-                <tr>
-                    <th>Fund Name</th>
-                    <th>Units</th>
-                    <th>Avg NAV</th>
-                    <th>P&L (%)</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Fund Name</th><th>Units</th><th>Avg NAV</th><th>Live NAV</th><th>P&L</th><th>Action</th></tr>
             </thead>
-            <tbody>
-                <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
-            </tbody>
+            <tbody><tr><td colspan="6" align="center">Loading...</td></tr></tbody>
         </table>
 
-        <h3 class="section-header">Active Fixed Deposits</h3>
+        <h3>Active Fixed Deposits</h3>
         <table id="fd-table">
             <thead>
-                <tr>
-                    <th>Amount</th>
-                    <th>Duration</th>
-                    <th>Rate</th>
-                    <th>Maturity Value</th>
-                    <th>Status</th>
-                </tr>
+                <tr><th>Amount</th><th>Duration</th><th>Rate</th><th>Maturity Value</th><th>Status</th></tr>
             </thead>
-            <tbody>
-                <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Loading...</td></tr>
-            </tbody>
+            <tbody><tr><td colspan="5" align="center">Loading...</td></tr></tbody>
         </table>
 
-        <div style="text-align: center; margin-top: 50px; padding-bottom: 20px; color: #64748b; font-size: 0.85em; letter-spacing: 1px;">
-            Created by team: <strong style="color: var(--accent-teal);">CODE BLOODED</strong>
-        </div>
+        <p style="text-align: center; color: #888; margin-top: 40px; font-size: 12px;">Created by Team: <strong>CODE BLOODED</strong></p>
     </div>
 
     <script type="module">
@@ -129,265 +106,300 @@
         import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
-            authDomain: "nivesh-2dff0.firebaseapp.com",
+            apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0", 
+            authDomain: "nivesh-2dff0.firebaseapp.com", 
             projectId: "nivesh-2dff0",
-            storageBucket: "nivesh-2dff0.firebasestorage.app",
-            messagingSenderId: "1098218411997",
-            appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834",
+            storageBucket: "nivesh-2dff0.firebasestorage.app", 
+            messagingSenderId: "1098218411997", 
+            appId: "1:1098218411997:web:7b1a2363ad1d5c56ec0834", 
             measurementId: "G-PEKDP4KZZQ"
         };
-
+        
         const API_URL = "http://127.0.0.1:8000";
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Predefined list of Top Indian Mutual Funds (Using ETFs for live Yahoo Finance data)
         const availableMFs = [
             { symbol: "SETFNIF50.NS", name: "SBI Nifty 50 ETF" },
             { symbol: "GOLDBEES.NS", name: "Nippon India Gold ETF" },
-            { symbol: "LIQUIDBEES.NS", name: "HDFC Liquid ETF" },
-            { symbol: "ICICINIFTY.NS", name: "ICICI Prudential Nifty ETF" },
-            { symbol: "KOTAKALPHA.NS", name: "Kotak Alpha 50 ETF" }
+            { symbol: "LIQUIDBEES.NS", name: "HDFC Liquid ETF" }
         ];
 
-        // Fetch Live Prices for the Dropdown
+        let liveUpdateInterval;
+        let globalStockDocs = [];
+        let globalMFDocs = [];
+        let globalFODocs = [];
+
         async function loadMFDropdown() {
             const mfSelect = document.getElementById('mf-symbol');
-            mfSelect.innerHTML = '<option value="" disabled selected>Loading live prices...</option>';
-            
             let optionsHTML = '';
             for (let mf of availableMFs) {
                 try {
                     const res = await fetch(`${API_URL}/price/${mf.symbol}`);
                     const data = await res.json();
                     optionsHTML += `<option value="${mf.symbol}">${mf.name} (₹${data.price.toFixed(2)})</option>`;
-                } catch (e) {
-                    optionsHTML += `<option value="${mf.symbol}">${mf.name} (Price unavailable)</option>`;
-                }
+                } catch (e) { optionsHTML += `<option value="${mf.symbol}">${mf.name}</option>`; }
             }
             mfSelect.innerHTML = '<option value="" disabled selected>Select Mutual Fund</option>' + optionsHTML;
         }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                document.getElementById('user-email').innerText = user.email || "User Logged In";
-                loadMFDropdown(); // Start loading dropdown prices immediately
+                document.getElementById('user-email').innerText = user.email || "Logged In";
+                loadMFDropdown(); 
                 await loadDashboardData(user.uid);
-            } else {
-                setTimeout(() => { window.location.href = "index.html"; }, 1000);
+            } else { 
+                setTimeout(() => { window.location.href = "index.html"; }, 1000); 
             }
         });
 
         async function loadDashboardData(uid) {
+            if(liveUpdateInterval) clearInterval(liveUpdateInterval);
+
+            // --- 1. Load Initial Balance ---
             try {
-                // --- 1. Load Cash Balance ---
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
-
                 if (userSnap.exists()) {
-                    const balance = userSnap.data().cashBalance ?? 0;
-                    document.getElementById('wallet-balance').innerText = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    document.getElementById('wallet-balance').innerText = `₹${(userSnap.data().cashBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                 } else {
-                    let startingAmount = 0;
-                    let isValid = false;
+                    let startingAmount = 0; let isValid = false;
                     while (!isValid) {
-                        let userInput = prompt("Welcome to NiveshMitr!\nHow much virtual cash do you want to start with? (Between ₹10 and ₹10,00,000)", "100000");
-                        if (userInput === null) { alert("⚠️ You must enter a starting balance."); continue; }
+                        let userInput = prompt("Welcome to NiveshMitr!\nHow much virtual cash do you want to start with?", "100000");
+                        if (userInput === null) { alert("Please enter an amount."); continue; }
                         let parsed = parseFloat(userInput);
-                        if (!isNaN(parsed) && parsed >= 10 && parsed <= 1000000) { startingAmount = parsed; isValid = true; } 
-                        else { alert("❌ Invalid amount! Please enter a number strictly between ₹10 and ₹10,00,000."); }
+                        if (!isNaN(parsed) && parsed >= 10 && parsed <= 1000000) { startingAmount = parsed; isValid = true; } else { alert("Invalid amount."); }
                     }
                     await setDoc(userRef, { email: auth.currentUser.email || "", cashBalance: startingAmount, createdAt: new Date().toISOString() });
                     document.getElementById('wallet-balance').innerText = `₹${startingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                 }
+            } catch (err) { console.error("Balance Error:", err); }
 
-                // --- 2. Load Stock Holdings ---
+            // --- 2. Load Stocks Table (Isolated) ---
+            const stockBody = document.querySelector("#holdings-table tbody");
+            try {
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
-                const stockBody = document.querySelector("#holdings-table tbody");
-                
-                if (stockSnap.empty) {
-                    stockBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No holdings yet. Buy your first stock!</td></tr>`;
-                } else {
+                globalStockDocs = stockSnap.docs;
+                if (stockSnap.empty) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:#888;">No holdings.</td></tr>`; } 
+                else {
                     stockBody.innerHTML = "";
                     stockSnap.docs.forEach(d => {
                         const data = d.data();
-                        const rowId = `row-${d.id}`;
-                        
-                        stockBody.innerHTML += `<tr id="${rowId}">
-                            <td><strong>${data.symbol}</strong></td>
-                            <td>${data.quantity}</td>
-                            <td>₹${parseFloat(data.avgPrice).toFixed(2)}</td>
-                            <td class="pnl-cell" style="color:var(--text-muted); font-size: 0.9em;">Fetching live...</td>
-                            <td><button onclick="handleSell('${data.symbol}', ${data.quantity})" style="color:#ff8a80; background:rgba(255,138,128,0.1); border:1px solid #ff8a80; padding:6px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">Sell</button></td>
+                        const safeAvgCost = parseFloat(data.avgPrice) || 0; 
+                        stockBody.innerHTML += `<tr id="row-${d.id}">
+                            <td><b>${data.symbol}</b></td><td>${data.quantity}</td><td>₹${safeAvgCost.toFixed(2)}</td>
+                            <td id="live-price-${d.id}">...</td><td id="pnl-${d.id}">...</td>
+                            <td><button class="sell-btn" onclick="handleSell('${data.symbol}', ${data.quantity})">Sell</button></td>
                         </tr>`;
-
-                        fetch(`${API_URL}/price/${data.symbol}`)
-                            .then(res => res.json())
-                            .then(priceData => {
-                                const pnlPercent = ((priceData.price - data.avgPrice) / data.avgPrice) * 100;
-                                const color = pnlPercent >= 0 ? '#20c997' : '#ff8a80'; 
-                                const sign = pnlPercent >= 0 ? '+' : '';
-                                document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:${color}; font-weight:bold;">${sign}${pnlPercent.toFixed(2)}%</span>`;
-                            }).catch(() => { document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:var(--text-muted);">Error</span>`; });
                     });
                 }
+            } catch (err) { 
+                stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
+            }
 
-                // --- 3. Load Mutual Fund Holdings ---
+            // --- 3. Load F/O Table (Isolated) ---
+            const foBody = document.querySelector("#fo-table tbody");
+            try {
+                const foSnap = await getDocs(query(collection(db, "fo_holdings"), where("userId", "==", uid)));
+                globalFODocs = foSnap.docs;
+                if (foSnap.empty) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:#888;">No active contracts.</td></tr>`; } 
+                else {
+                    foBody.innerHTML = "";
+                    foSnap.docs.forEach(d => {
+                        const data = d.data();
+                        const name = data.symbol === "^NSEI" ? "NIFTY 50" : "BANK NIFTY";
+                        const safeEntry = parseFloat(data.entryPrice) || 0; 
+                        foBody.innerHTML += `<tr id="fo-${d.id}">
+                            <td><b>${name}</b></td><td>${data.optionType}</td><td>${data.lots} (${data.lots * data.lotSize} qty)</td>
+                            <td>${safeEntry.toFixed(2)}</td><td id="fo-live-${d.id}">...</td><td id="fo-pnl-${d.id}">...</td>
+                            <td><button class="sell-btn" onclick="handleCloseFO('${data.symbol}', '${data.optionType}')">Close</button></td>
+                        </tr>`;
+                    });
+                }
+            } catch (err) { 
+                foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
+            }
+
+            // --- 4. Load Mutual Funds Table (Isolated) ---
+            const mfBody = document.querySelector("#mf-table tbody");
+            try {
                 const mfSnap = await getDocs(query(collection(db, "mutual_funds"), where("userId", "==", uid)));
-                const mfBody = document.querySelector("#mf-table tbody");
-                
-                if (mfSnap.empty) {
-                    mfBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No mutual funds yet. Start investing!</td></tr>`;
-                } else {
+                globalMFDocs = mfSnap.docs;
+                if (mfSnap.empty) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:#888;">No mutual funds yet.</td></tr>`; } 
+                else {
                     mfBody.innerHTML = "";
                     mfSnap.docs.forEach(d => {
                         const data = d.data();
-                        const rowId = `mf-row-${d.id}`;
-                        
-                        // Find the pretty name from our array
                         const fundObj = availableMFs.find(f => f.symbol === data.fundName);
                         const displayName = fundObj ? fundObj.name : data.fundName;
-                        
-                        mfBody.innerHTML += `<tr id="${rowId}">
-                            <td><strong>${displayName}</strong><br><small style="color:var(--text-muted);">${data.fundName}</small></td>
-                            <td>${data.units}</td>
-                            <td>₹${parseFloat(data.navAtPurchase).toFixed(2)}</td>
-                            <td class="pnl-cell" style="color:var(--text-muted); font-size: 0.9em;">Fetching live...</td>
-                            <td><button onclick="handleSellMF('${data.fundName}', ${data.units})" style="color:#ff8a80; background:rgba(255,138,128,0.1); border:1px solid #ff8a80; padding:6px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">Sell</button></td>
-                        </tr>`;
-
-                        fetch(`${API_URL}/price/${data.fundName}`)
-                            .then(res => res.json())
-                            .then(priceData => {
-                                const pnlPercent = ((priceData.price - data.navAtPurchase) / data.navAtPurchase) * 100;
-                                const color = pnlPercent >= 0 ? '#20c997' : '#ff8a80'; 
-                                const sign = pnlPercent >= 0 ? '+' : '';
-                                document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:${color}; font-weight:bold;">${sign}${pnlPercent.toFixed(2)}%</span>`;
-                            }).catch(() => { document.querySelector(`#${rowId} .pnl-cell`).innerHTML = `<span style="color:var(--text-muted);">Error</span>`; });
-                    });
-                }
-
-                // --- 4. Load Fixed Deposits ---
-                const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
-                const fdBody = document.querySelector("#fd-table tbody");
-                
-                if (fdSnap.empty) {
-                    fdBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No active FDs.</td></tr>`;
-                } else {
-                    fdBody.innerHTML = "";
-                    fdSnap.forEach(d => {
-                        const data = d.data();
-                        const principal = parseFloat(data.amount);
-                        const rate = data.rate ?? 0.07;
-                        const maturityValue = principal + (principal * rate * (parseInt(data.durationMonths) / 12));
-
-                        fdBody.innerHTML += `<tr>
-                            <td>₹${principal.toLocaleString('en-IN')}</td>
-                            <td>${data.durationMonths} Months</td>
-                            <td>${(rate * 100).toFixed(0)}%</td>
-                            <td style="color: var(--accent-blue); font-weight: bold;">₹${maturityValue.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-                            <td><span style="color:#20c997; font-weight:bold;">${data.status}</span></td>
+                        const safeNav = parseFloat(data.navAtPurchase) || 0;
+                        mfBody.innerHTML += `<tr id="mf-row-${d.id}">
+                            <td><b>${displayName}</b><br><small style="color:#777;">${data.fundName}</small></td>
+                            <td>${data.units}</td><td>₹${safeNav.toFixed(2)}</td>
+                            <td id="mf-live-price-${d.id}">...</td><td id="mf-pnl-${d.id}">...</td>
+                            <td><button class="sell-btn" onclick="handleSellMF('${data.fundName}', ${data.units})">Sell</button></td>
                         </tr>`;
                     });
                 }
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('wallet-balance').innerText = "Error loading data";
+            } catch (err) { 
+                mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
             }
+
+            // --- 5. Load FDs Table (Isolated) ---
+            const fdBody = document.querySelector("#fd-table tbody");
+            try {
+                const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
+                if (fdSnap.empty) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:#888;">No active FDs.</td></tr>`; } 
+                else {
+                    fdBody.innerHTML = "";
+                    fdSnap.docs.forEach(d => {
+                        const data = d.data();
+                        const principal = parseFloat(data.amount) || 0;
+                        const rate = parseFloat(data.rate) || 0.07;
+                        const maturityValue = principal + (principal * rate * (parseInt(data.durationMonths) / 12));
+                        fdBody.innerHTML += `<tr>
+                            <td>₹${principal.toLocaleString('en-IN')}</td><td>${data.durationMonths} Months</td><td>${(rate * 100).toFixed(0)}%</td>
+                            <td><b>₹${maturityValue.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</b></td>
+                            <td style="color:green; font-weight:bold;">${data.status}</td>
+                        </tr>`;
+                    });
+                }
+            } catch (err) { 
+                fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:red; font-weight:bold;">Error: ${err.message}</td></tr>`; 
+            }
+
+            // --- 6. 10-Second Live Polling Engine ---
+            // Because the tables above are isolated, even if one fails, this WILL run!
+            const fetchLivePrices = () => {
+                globalStockDocs.forEach(d => {
+                    const data = d.data();
+                    fetch(`${API_URL}/price/${data.symbol}`).then(res => res.json()).then(p => {
+                        if(p.price === undefined) return; 
+                        const safeAvg = parseFloat(data.avgPrice) || 0;
+                        const pnl = ((p.price - safeAvg) / safeAvg) * 100;
+                        const el = document.getElementById(`live-price-${d.id}`);
+                        if(el) {
+                            el.innerText = `₹${p.price.toFixed(2)}`;
+                            document.getElementById(`pnl-${d.id}`).innerHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
+                        }
+                    }).catch(e => console.log("Stock fetch error"));
+                });
+
+                globalMFDocs.forEach(d => {
+                    const data = d.data();
+                    fetch(`${API_URL}/price/${data.fundName}`).then(res => res.json()).then(p => {
+                        if(p.price === undefined) return;
+                        const safeNav = parseFloat(data.navAtPurchase) || 0;
+                        const pnl = ((p.price - safeNav) / safeNav) * 100;
+                        const el = document.getElementById(`mf-live-price-${d.id}`);
+                        if(el) {
+                            el.innerText = `₹${p.price.toFixed(2)}`;
+                            document.getElementById(`mf-pnl-${d.id}`).innerHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
+                        }
+                    }).catch(e => console.log("MF fetch error"));
+                });
+
+                globalFODocs.forEach(d => {
+                    const data = d.data();
+                    fetch(`${API_URL}/price/${data.symbol}`).then(res => res.json()).then(p => {
+                        if(p.price === undefined) return;
+                        const safeEntry = parseFloat(data.entryPrice) || 0;
+                        const diff = data.optionType === "CE" ? (p.price - safeEntry) : (safeEntry - p.price);
+                        const pnlRs = diff * (data.lots * data.lotSize);
+                        const el = document.getElementById(`fo-live-${d.id}`);
+                        if(el) {
+                            el.innerText = p.price.toFixed(2);
+                            document.getElementById(`fo-pnl-${d.id}`).innerHTML = `<span style="color:${pnlRs>=0?'green':'red'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
+                            el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
+                        }
+                    }).catch(e => console.log("FO fetch error"));
+                });
+            };
+            
+            fetchLivePrices();
+            liveUpdateInterval = setInterval(fetchLivePrices, 10000);
         }
 
+        // --- BUTTON STATES & LOGIC ---
         function setBtn(id, loading, defaultText) {
             const btn = document.getElementById(id);
             if(btn) { btn.disabled = loading; btn.innerText = loading ? "Processing..." : defaultText; }
         }
 
-        // --- Buy Logic ---
         window.handleTrade = async (endpoint, type) => {
-            const isMF = type === 'mf';
-            // Getting the value from the dropdown if it's MF, otherwise text input
-            const sym = document.getElementById(isMF ? 'mf-symbol' : 'symbol').value.trim().toUpperCase();
-            const qty = document.getElementById(isMF ? 'mf-quantity' : 'quantity').value.trim();
-            const btnId = isMF ? 'buy-mf-btn' : 'buy-stock-btn';
-            const defaultText = isMF ? 'Invest in MF' : 'Buy Stock';
-
-            if (!sym || !qty || parseInt(qty) <= 0) return alert("Please select a valid option and quantity.");
-
+            const sym = document.getElementById(type === 'mf' ? 'mf-symbol' : 'symbol').value.trim().toUpperCase();
+            const qty = document.getElementById(type === 'mf' ? 'mf-quantity' : 'quantity').value.trim();
+            const btnId = type === 'mf' ? 'buy-mf-btn' : 'buy-stock-btn';
+            const defaultText = type === 'mf' ? 'Invest in MF' : 'Buy Stock';
+            
+            if (!sym || !qty) return alert("Please fill all fields.");
             setBtn(btnId, true, defaultText);
             try {
-                const res = await fetch(`${API_URL}/${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, quantity: parseInt(qty) })
-                });
-                const data = await res.json();
-                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
-                if (res.ok) location.reload();
-            } catch (err) { alert("❌ Cannot connect to backend."); }
+                const res = await fetch(`${API_URL}/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, quantity: parseInt(qty) }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error. Make sure your Python server is running!"); }
             setBtn(btnId, false, defaultText);
         };
 
-        // --- Sell Stock Logic ---
         window.handleSell = async (symbol, maxQty) => {
-            const qtyToSell = prompt(`You own ${maxQty} shares of ${symbol}.\nHow many shares do you want to sell?`, maxQty);
-            if (!qtyToSell || isNaN(qtyToSell) || parseInt(qtyToSell) <= 0) return;
-            if (parseInt(qtyToSell) > maxQty) return alert(`❌ You cannot sell more shares than you own!`);
-
+            const qty = prompt(`Sell how many shares? (Max: ${maxQty})`, maxQty);
+            if (!qty || parseInt(qty) > maxQty) return;
             try {
-                const res = await fetch(`${API_URL}/sell`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qtyToSell) })
-                });
-                const data = await res.json();
-                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
-                if (res.ok) location.reload();
-            } catch (err) { alert("❌ Cannot connect to backend."); }
+                const res = await fetch(`${API_URL}/sell`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qty) }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error"); }
         };
 
-        // --- Sell MF Logic ---
         window.handleSellMF = async (symbol, maxQty) => {
-            const qtyToSell = prompt(`You own ${maxQty} units.\nHow many units do you want to sell?`, maxQty);
-            if (!qtyToSell || isNaN(qtyToSell) || parseInt(qtyToSell) <= 0) return;
-            if (parseInt(qtyToSell) > maxQty) return alert(`❌ You cannot sell more units than you own!`);
-
+            const qty = prompt(`Sell how many units? (Max: ${maxQty})`, maxQty);
+            if (!qty || parseInt(qty) > maxQty) return;
             try {
-                const res = await fetch(`${API_URL}/sell_mf`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qtyToSell) })
-                });
-                const data = await res.json();
-                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
-                if (res.ok) location.reload();
-            } catch (err) { alert("❌ Cannot connect to backend."); }
+                const res = await fetch(`${API_URL}/sell_mf`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, quantity: parseInt(qty) }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error"); }
         };
 
-        // --- FD Logic ---
+        window.handleFOTrade = async () => {
+            const sym = document.getElementById('fo-symbol').value;
+            const type = document.getElementById('fo-type').value;
+            const lots = document.getElementById('fo-lots').value;
+            if (!lots || lots <= 0) return alert("Please enter valid lots.");
+            
+            setBtn('buy-fo-btn', true, "Buy Contract (₹5k/lot)");
+            try {
+                const res = await fetch(`${API_URL}/buy_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: sym, option_type: type, lots: parseInt(lots) }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error"); }
+            setBtn('buy-fo-btn', false, "Buy Contract (₹5k/lot)");
+        };
+
+        window.handleCloseFO = async (symbol, type) => {
+            if(!confirm(`Are you sure you want to close all ${type} positions for this index?`)) return;
+            try {
+                const res = await fetch(`${API_URL}/close_fo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, symbol: symbol, option_type: type, lots: 0 }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error"); }
+        };
+
         window.handleFD = async () => {
             const amt = document.getElementById('fd-amount').value.trim();
             const months = document.getElementById('fd-months').value.trim();
-            if (!amt || !months || parseFloat(amt) <= 0 || parseInt(months) <= 0) return alert("Please enter valid details.");
+            if (!amt || !months) return alert("Please fill both amount and months.");
 
             setBtn('create-fd-btn', true, 'Open FD');
             try {
-                const res = await fetch(`${API_URL}/create_fd`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: auth.currentUser.uid, amount: parseFloat(amt), duration_months: parseInt(months) })
-                });
-                const data = await res.json();
-                alert(res.ok ? `✅ ${data.message}` : `❌ Error: ${data.detail}`);
-                if (res.ok) location.reload();
-            } catch (err) { alert("❌ Cannot connect to backend."); }
+                const res = await fetch(`${API_URL}/create_fd`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: auth.currentUser.uid, amount: parseFloat(amt), duration_months: parseInt(months) }) });
+                if (res.ok) location.reload(); else alert((await res.json()).detail);
+            } catch (err) { alert("Backend Error"); }
             setBtn('create-fd-btn', false, 'Open FD');
         };
 
-        window.logout = async () => {
-            await signOut(auth);
-            window.location.href = "index.html";
+        window.logout = async () => { 
+            await signOut(auth); 
+            window.location.href = "index.html"; 
         };
     </script>
 </body>
