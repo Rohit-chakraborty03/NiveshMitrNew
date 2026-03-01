@@ -125,7 +125,7 @@
     </div>
 
     <script type="module">
-        // Set correct toggle text on load
+        //toggle text on load.
         document.getElementById('theme-btn').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -264,7 +264,7 @@
                 }
             } catch (err) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // Fixed Deposits Table
+            // Deposits Table
             const fdBody = document.querySelector("#fd-table tbody");
             try {
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
@@ -285,7 +285,6 @@
                 }
             } catch (err) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // Polling Engine
             const fetchLivePrices = () => {
                 globalStockDocs.forEach(d => {
                     const data = d.data();
@@ -344,7 +343,7 @@
             liveUpdateInterval = setInterval(fetchLivePrices, 10000);
         }
 
-        // Loss Analyzer Function
+        // Loss alert popup.
         window.showLossReason = (type) => {
             if (type === 'stock') {
                 alert("📉 STOCK LOSS ANALYSIS:\n\nYou are losing money because the current market price is lower than what you paid for it. This usually happens when more people are selling the stock than buying it, possibly due to bad news about the company, poor quarterly earnings, or a general market crash.");

@@ -1,4 +1,4 @@
-/* --- THEME VARIABLES --- */
+/*THEME VARIABLES */
 :root {
     --bg-body: #f9f9f9;
     --bg-card: #ffffff;
@@ -33,7 +33,6 @@
     --accent-blue: #60a5fa;
 }
 
-/* BASIC RESET */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -42,7 +41,7 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* --- LOGIN PAGE STYLES --- */
+/*  LOGIN PAGE STYLES  */
 .login-body {
     background-color: var(--bg-card);
     background-image: repeating-linear-gradient(transparent, transparent 39px, var(--notebook-line) 39px, var(--notebook-line) 40px);
@@ -86,7 +85,7 @@ body {
     color: var(--text-main);
 }
 
-/* --- DASHBOARD STYLES --- */
+/* DASHBOARD STYLES */
 .dashboard-body { background-color: var(--bg-body); }
 
 .navbar {
@@ -140,7 +139,6 @@ th { background-color: var(--table-header); }
 
 .sell-btn { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
 
-/* Learning Center */
 details { background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; margin-bottom: 8px; }
 summary { font-weight: bold; cursor: pointer; outline: none; color: var(--accent-blue); }
 details p { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--text-main); }
