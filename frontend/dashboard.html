@@ -5,78 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NiveshMitr - Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Extra styles for the learning section */
-        details {
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 8px;
+    <script>
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('theme-btn').innerText = target === 'dark' ? '☀️ Light' : '🌙 Dark';
         }
-        summary {
-            font-weight: bold;
-            cursor: pointer;
-            outline: none;
-            color: #0056b3;
-        }
-        details p {
-            margin-top: 10px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #333;
-        }
-        .why-btn {
-            background: #ffeeba;
-            border: 1px solid #ffdf7e;
-            color: #856404;
-            border-radius: 10px;
-            padding: 2px 6px;
-            font-size: 10px;
-            cursor: pointer;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-        .why-btn:hover { background: #ffdf7e; }
-    </style>
+    </script>
 </head>
 <body class="dashboard-body">
 
     <div class="navbar">
         <h2 style="margin: 0; font-size: 24px;"><span class="logo-icon" style="font-size: 24px;">💠</span> NiveshMitr</h2>
         <div class="nav-buttons">
-            <span id="user-email" style="font-size: 14px; color: #555; margin-right: 15px;">Loading...</span>
+            <span id="user-email" style="font-size: 14px; color: var(--text-muted); margin-right: 15px;">Loading...</span>
+            <button id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
             <button onclick="location.reload()">Refresh</button>
-            <button onclick="logout()" style="color: red; border-color: red;">Logout</button>
+            <button onclick="logout()" style="color: #ff4d4d; border-color: #ff4d4d;">Logout</button>
         </div>
     </div>
 
     <div class="container">
         
-        <div class="card" style="margin-bottom: 20px; background-color: #f8fbff; border-left: 4px solid #0056b3;">
-            <h3 style="margin-top: 0; color: #0056b3;">📚 Student Learning Center</h3>
-            
+        <div class="card" style="margin-bottom: 20px; background-color: var(--learning-bg); border-left: 4px solid var(--learning-border);">
+            <h3 style="margin-top: 0; color: var(--accent-blue);">📚 Student Learning Center</h3>
             <details>
                 <summary>📈 What are Stocks?</summary>
-                <p><strong>Definition:</strong> A stock represents a tiny fraction of ownership in a real company (like Tata or Reliance).<br>
-                <strong>How it works:</strong> If you buy 10 shares of a company, you own a small piece of it. If the company does well, makes profits, and grows, other people will want to buy those shares, pushing the price up. You make money by selling your shares at that higher price!</p>
+                <p><strong>Definition:</strong> A stock represents a tiny fraction of ownership in a real company.<br>
+                <strong>How it works:</strong> You make money by selling your shares at a higher price than you bought them!</p>
             </details>
-
             <details>
                 <summary>🧺 What are Mutual Funds?</summary>
-                <p><strong>Definition:</strong> A mutual fund is like a basket of many different stocks. Instead of picking 50 companies yourself, an expert manager pools money from thousands of people and buys the basket for everyone.<br>
-                <strong>How it works:</strong> You buy "Units" of this basket. It is much safer than buying a single stock because if one company fails, the other 49 in the basket can still grow and protect your money. It's the best way for students to start investing.</p>
+                <p><strong>Definition:</strong> A mutual fund is like a basket of many different stocks managed by an expert.<br>
+                <strong>How it works:</strong> It is much safer than buying a single stock because if one company fails, the others in the basket protect your money.</p>
             </details>
-
             <details>
-                <summary>⚡ What is F&O (Futures & Options) Trading?</summary>
-                <p><strong>Definition:</strong> F&O are advanced contracts where you bet on which direction the market will go by a certain date, without actually buying the stocks.<br>
-                <strong>How it works:</strong> If you think Nifty 50 will go UP, you buy a <b>Call (CE)</b>. If you think it will go DOWN, you buy a <b>Put (PE)</b>. Because you are only paying a small premium (margin) to control a large amount of money (lots), your profits can be massive—but your losses can wipe out your entire capital in minutes. It is very risky!</p>
+                <summary>⚡ What is F&O Trading?</summary>
+                <p><strong>Definition:</strong> F&O are advanced contracts where you bet on market direction.<br>
+                <strong>How it works:</strong> If you think Nifty will go UP, buy a <b>Call (CE)</b>. If DOWN, buy a <b>Put (PE)</b>. Very risky!</p>
             </details>
         </div>
 
         <div class="balance-box">
-            <p style="margin: 0; color: #666; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Available Virtual Cash</p>
+            <p style="margin: 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Available Virtual Cash</p>
             <h1 id="wallet-balance" style="margin: 10px 0; font-size: 42px;">Loading...</h1>
         </div>
 
@@ -145,10 +121,13 @@
             <tbody><tr><td colspan="5" align="center">Loading...</td></tr></tbody>
         </table>
 
-        <p style="text-align: center; color: #888; margin-top: 40px; font-size: 12px;">Created by Team: <strong>CODE BLOODED</strong></p>
+        <p style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 12px;">Created by Team: <strong>CODE BLOODED</strong></p>
     </div>
 
     <script type="module">
+        // Set correct toggle text on load
+        document.getElementById('theme-btn').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -203,7 +182,6 @@
         async function loadDashboardData(uid) {
             if(liveUpdateInterval) clearInterval(liveUpdateInterval);
 
-            // 1. Balance
             try {
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
@@ -222,12 +200,12 @@
                 }
             } catch (err) { console.error(err); }
 
-            // 2. Stocks
+            // Stocks Table
             const stockBody = document.querySelector("#holdings-table tbody");
             try {
                 const stockSnap = await getDocs(query(collection(db, "holdings"), where("userId", "==", uid)));
                 globalStockDocs = stockSnap.docs;
-                if (stockSnap.empty) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:#888;">No holdings.</td></tr>`; } 
+                if (stockSnap.empty) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:var(--text-muted);">No holdings.</td></tr>`; } 
                 else {
                     stockBody.innerHTML = "";
                     stockSnap.docs.forEach(d => {
@@ -242,12 +220,12 @@
                 }
             } catch (err) { stockBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // 3. F/O
+            // F/O Table
             const foBody = document.querySelector("#fo-table tbody");
             try {
                 const foSnap = await getDocs(query(collection(db, "fo_holdings"), where("userId", "==", uid)));
                 globalFODocs = foSnap.docs;
-                if (foSnap.empty) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:#888;">No active contracts.</td></tr>`; } 
+                if (foSnap.empty) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:var(--text-muted);">No active contracts.</td></tr>`; } 
                 else {
                     foBody.innerHTML = "";
                     foSnap.docs.forEach(d => {
@@ -263,12 +241,12 @@
                 }
             } catch (err) { foBody.innerHTML = `<tr><td colspan="7" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // 4. Mutual Funds
+            // Mutual Funds Table
             const mfBody = document.querySelector("#mf-table tbody");
             try {
                 const mfSnap = await getDocs(query(collection(db, "mutual_funds"), where("userId", "==", uid)));
                 globalMFDocs = mfSnap.docs;
-                if (mfSnap.empty) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:#888;">No mutual funds yet.</td></tr>`; } 
+                if (mfSnap.empty) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:var(--text-muted);">No mutual funds yet.</td></tr>`; } 
                 else {
                     mfBody.innerHTML = "";
                     mfSnap.docs.forEach(d => {
@@ -277,7 +255,7 @@
                         const displayName = fundObj ? fundObj.name : data.fundName;
                         const safeNav = parseFloat(data.navAtPurchase) || 0;
                         mfBody.innerHTML += `<tr id="mf-row-${d.id}">
-                            <td><b>${displayName}</b><br><small style="color:#777;">${data.fundName}</small></td>
+                            <td><b>${displayName}</b><br><small style="color:var(--text-muted);">${data.fundName}</small></td>
                             <td>${data.units}</td><td>₹${safeNav.toFixed(2)}</td>
                             <td id="mf-live-price-${d.id}">...</td><td id="mf-pnl-${d.id}">...</td>
                             <td><button class="sell-btn" onclick="handleSellMF('${data.fundName}', ${data.units})">Sell</button></td>
@@ -286,11 +264,11 @@
                 }
             } catch (err) { mfBody.innerHTML = `<tr><td colspan="6" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // 5. Fixed Deposits
+            // Fixed Deposits Table
             const fdBody = document.querySelector("#fd-table tbody");
             try {
                 const fdSnap = await getDocs(query(collection(db, "fixed_deposits"), where("userId", "==", uid)));
-                if (fdSnap.empty) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:#888;">No active FDs.</td></tr>`; } 
+                if (fdSnap.empty) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:var(--text-muted);">No active FDs.</td></tr>`; } 
                 else {
                     fdBody.innerHTML = "";
                     fdSnap.docs.forEach(d => {
@@ -301,13 +279,13 @@
                         fdBody.innerHTML += `<tr>
                             <td>₹${principal.toLocaleString('en-IN')}</td><td>${data.durationMonths} Months</td><td>${(rate * 100).toFixed(0)}%</td>
                             <td><b>₹${maturityValue.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</b></td>
-                            <td style="color:green; font-weight:bold;">${data.status}</td>
+                            <td style="color:#10b981; font-weight:bold;">${data.status}</td>
                         </tr>`;
                     });
                 }
             } catch (err) { fdBody.innerHTML = `<tr><td colspan="5" align="center" style="color:red;">Error: ${err.message}</td></tr>`; }
 
-            // 6. Polling Engine with Interactive Education Buttons
+            // Polling Engine
             const fetchLivePrices = () => {
                 globalStockDocs.forEach(d => {
                     const data = d.data();
@@ -318,7 +296,7 @@
                         const el = document.getElementById(`live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
                             if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('stock')">❓ Why?</button>`;
                             document.getElementById(`pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
@@ -335,7 +313,7 @@
                         const el = document.getElementById(`mf-live-price-${d.id}`);
                         if(el) {
                             el.innerText = `₹${p.price.toFixed(2)}`;
-                            let pnlHTML = `<span style="color:${pnl>=0?'green':'red'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
+                            let pnlHTML = `<span style="color:${pnl>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span>`;
                             if(pnl < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('mf')">❓ Why?</button>`;
                             document.getElementById(`mf-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
@@ -353,7 +331,7 @@
                         const el = document.getElementById(`fo-live-${d.id}`);
                         if(el) {
                             el.innerText = p.price.toFixed(2);
-                            let pnlHTML = `<span style="color:${pnlRs>=0?'green':'red'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
+                            let pnlHTML = `<span style="color:${pnlRs>=0?'#10b981':'#ef4444'}; font-weight:bold;">${pnlRs>=0?'+₹':'-₹'}${Math.abs(pnlRs).toFixed(0)}</span>`;
                             if(pnlRs < 0) pnlHTML += `<button class="why-btn" onclick="showLossReason('fo')">❓ Why?</button>`;
                             document.getElementById(`fo-pnl-${d.id}`).innerHTML = pnlHTML;
                             el.classList.remove("updating"); void el.offsetWidth; el.classList.add("updating");
@@ -366,7 +344,7 @@
             liveUpdateInterval = setInterval(fetchLivePrices, 10000);
         }
 
-        // --- NEW: EDUCATIONAL LOSS ANALYZER ---
+        // Loss Analyzer Function
         window.showLossReason = (type) => {
             if (type === 'stock') {
                 alert("📉 STOCK LOSS ANALYSIS:\n\nYou are losing money because the current market price is lower than what you paid for it. This usually happens when more people are selling the stock than buying it, possibly due to bad news about the company, poor quarterly earnings, or a general market crash.");

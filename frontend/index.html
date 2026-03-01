@@ -6,9 +6,13 @@
     <title>NiveshMitr - Login</title>
     <link rel="stylesheet" href="css/style.css">
     
+    <script>
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+    </script>
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-        // Initialize EmailJS
         emailjs.init("vsg98k7T7lRE0hSj-"); 
     </script>
 </head>
@@ -27,18 +31,18 @@
     </div>
 
     <div id="otp-section" style="display: none;">
-        <p style="font-size: 12px; color: green; margin-bottom: 5px;">
+        <p style="font-size: 12px; color: #10b981; margin-bottom: 5px;">
             OTP sent to <span id="display-email" style="font-weight: bold;"></span>
         </p>
         <input type="text" id="otp" class="input-box" placeholder="Enter 6-digit OTP" maxlength="6" required><br>
         <button class="btn-black" id="verify-otp-btn">Verify & Login</button>
         <br>
-        <button style="background:none; border:none; color:blue; cursor:pointer; font-size: 12px; margin-top: 10px;" onclick="location.reload()">
+        <button style="background:none; border:none; color:var(--accent-blue); cursor:pointer; font-size: 12px; margin-top: 10px;" onclick="location.reload()">
             Go Back
         </button>
     </div>
 
-    <p style="color: #999; font-size: 12px; margin: 15px 0;">OR</p>
+    <p style="color: var(--text-muted); font-size: 12px; margin: 15px 0;">OR</p>
 
     <button class="btn-black" id="google-login-btn">
         <span style="margin-right: 8px; font-weight: bold;">G</span> Login with Google
@@ -48,7 +52,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Your Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyC490phLCfByyxbgpfjv804EdtSDjQUin0",
             authDomain: "nivesh-2dff0.firebaseapp.com",
@@ -66,12 +69,10 @@
         let generatedOTP = "";
         let userEmail = "";
 
-        // Auto-Redirect if already logged in
         onAuthStateChanged(auth, (user) => { 
             if (user) window.location.href = "dashboard.html"; 
         });
 
-        // --- STEP 1: SEND OTP ---
         document.getElementById('send-otp-btn').addEventListener('click', () => {
             userEmail = document.getElementById('email').value.trim();
             if (!userEmail) return alert("Please enter a valid email.");
@@ -80,16 +81,11 @@
             btn.innerText = "Sending..."; 
             btn.disabled = true;
 
-            // Generate a random 6-digit OTP
             generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             
-            // EmailJS Config
             const serviceID = "service_iw9xo6f";
             const templateID = "template_yavdxkr";
-            const templateParams = { 
-                to_email: userEmail, 
-                otp_code: generatedOTP 
-            };
+            const templateParams = { to_email: userEmail, otp_code: generatedOTP };
 
             emailjs.send(serviceID, templateID, templateParams)
                 .then(() => {
@@ -98,54 +94,34 @@
                     document.getElementById('display-email').innerText = userEmail;
                 })
                 .catch((err) => {
-                    alert("Failed to send OTP. Check console for details."); 
-                    console.error("EmailJS Error:", err);
+                    alert("Failed to send OTP."); 
                     btn.innerHTML = '<span style="margin-right: 8px;">📧</span> Send Login OTP'; 
                     btn.disabled = false;
                 });
         });
 
-        // --- STEP 2: VERIFY OTP & LOGIN ---
         document.getElementById('verify-otp-btn').addEventListener('click', async () => {
             const enteredOTP = document.getElementById('otp').value.trim();
             const btn = document.getElementById('verify-otp-btn');
             
-            if (enteredOTP !== generatedOTP) return alert("❌ Incorrect OTP. Please try again.");
+            if (enteredOTP !== generatedOTP) return alert("❌ Incorrect OTP.");
 
             btn.innerText = "Authenticating..."; 
             btn.disabled = true;
-            
-            // Universal secure password for Hackathon OTP users
             const universalPassword = "NiveshMitr@Hackathon2026!";
 
             try {
-                // Try logging in existing user
                 await signInWithEmailAndPassword(auth, userEmail, universalPassword);
             } catch (error) {
-                // If user doesn't exist, create account on the spot
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    try { 
-                        await createUserWithEmailAndPassword(auth, userEmail, universalPassword); 
-                    } catch (createError) { 
-                        alert(`Error creating account: ${createError.message}`); 
-                        btn.innerText = "Verify & Login";
-                        btn.disabled = false; 
-                    }
-                } else { 
-                    alert(`Error: ${error.message}`); 
-                    btn.innerText = "Verify & Login";
-                    btn.disabled = false; 
-                }
+                    try { await createUserWithEmailAndPassword(auth, userEmail, universalPassword); } 
+                    catch (createError) { alert(`Error: ${createError.message}`); btn.innerText = "Verify & Login"; btn.disabled = false; }
+                } else { alert(`Error: ${error.message}`); btn.innerText = "Verify & Login"; btn.disabled = false; }
             }
         });
 
-        // --- GOOGLE LOGIN ---
         document.getElementById('google-login-btn').addEventListener('click', async () => {
-            try { 
-                await signInWithPopup(auth, provider); 
-            } catch (error) { 
-                alert(`Login Failed: ${error.message}`); 
-            }
+            try { await signInWithPopup(auth, provider); } catch (error) { alert(`Login Failed`); }
         });
     </script>
 </body>
