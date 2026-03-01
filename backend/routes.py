@@ -1,22 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import requests
-import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import firestore
+from database import db  # Using your working database connection!
 
 router = APIRouter()
 
-# 1. Initialize Firebase
-if not firebase_admin._apps:
-    try:
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred)
-    except Exception as e:
-        print("Firebase Init Error:", e)
-
-db = firestore.client()
-
-# 2. Request Models
+# 1. Request Models
 class TradeRequest(BaseModel):
     user_id: str
     symbol: str
@@ -27,7 +17,7 @@ class FDRequest(BaseModel):
     amount: float
     duration_months: int
 
-# 3. Helper Functions 
+# 2. Helper Functions 
 def get_stock_price(symbol: str) -> float:
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
@@ -59,7 +49,7 @@ def get_user_balance(user_id: str):
         raise HTTPException(status_code=404, detail="User not found. Please log out and log in again.")
     return user_ref, user_doc.to_dict().get("cashBalance", 0)
 
-# 4. Routes
+# 3. Routes
 @router.get("/ping")
 def ping():
     return {"status": "Backend is running"}
@@ -142,7 +132,6 @@ def sell_stock(req: TradeRequest):
 @router.post("/buy_mf")
 def buy_mf(req: TradeRequest):
     try:
-        # Now fetches real-time NAV instead of fake 150.0
         nav = get_stock_price(req.symbol)
         total_cost = nav * req.quantity
         user_ref, current_balance = get_user_balance(req.user_id)
