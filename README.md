@@ -11,5 +11,5 @@ Frontend: HTML, CSS, JavaScript,
 Backend: Python + FastAPI
 Database & Auth: Firebase Firestore + Firebase Authentication
 Market Data: Yahoo Finance API
-Huge thanks to my teammates Priyanshu Raj and Rohit Chakraborty for building this from scratch in limited time.
+My team: Priyanshu Raj , Rohit Chakraborty, Abhijeet Tewary has built this from scratch in limited time.
 This was our first hackathon — but it marks the beginning of many more builds, bigger ideas, and stronger solutions ahead.
