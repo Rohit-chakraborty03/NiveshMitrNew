@@ -1,15 +1,26 @@
-Diversion 2k26 was our first-ever hackathon, and we proudly participated as Team Code Blooded. It was an incredible learning experience where we built NiveshMitr — a paper-trading platform designed to protect early trading learners from losing real money.
-As first-year students, we’ve seen many beginners jump into trading without understanding risk — and lose their pocket money quickly.
-So we built a safe space where students can learn and experiment before risking real capital.
-About NiveshMitr
-A simulation platform where users can choose virtual capital ranging from ₹10,000 to ₹10,00,000 and: • Trade stocks (real-time prices)
-• Invest in mutual funds
-• Create fixed deposits
-• Learn from mistakes using our unique “Why?” loss explanation feature
-Tech Stack:
-Frontend: HTML, CSS, JavaScript,
-Backend: Python + FastAPI
-Database & Auth: Firebase Firestore + Firebase Authentication
-Market Data: Yahoo Finance API
-My team: Priyanshu Raj , Rohit Chakraborty, Abhijeet Tewary has built this from scratch in limited time.
-This was our first hackathon — but it marks the beginning of many more builds, bigger ideas, and stronger solutions ahead.
+# 💠 NiveshMitr
+**Your Personal Paper Trading Navigator**
+
+Built with ❤️ for the **Diversion 2k26 Hackathon** by Team **CODE BLOODED**.
+
+## 👨‍💻 The Team
+* **Rohit Chakravorty** - Backend,Database
+* **Priyanashu Raj** - Presentation,Research,Frontend 
+* **Abhijeet Tewary** - Fullstack
+
+## 🚀 About The Project
+Students want to learn about the stock market, especially Futures & Options, but testing strategies with real savings is too risky. Existing apps are cluttered and confusing. 
+
+**NiveshMitr** is a completely risk-free paper trading simulator designed specifically for beginners. We stripped away all the confusing charts and built a clean, student-friendly dashboard.
+
+## ✨ Key Features
+* **Risk-Free Practice:** Start with ₹1,00,000 virtual cash.
+* **Real-Time Data:** Fetches live market prices every 10 seconds.
+* **Dynamic Loss Analyzer:** A custom feature that actively teaches you *why* you are losing money on a trade (e.g., explaining "Theta Decay" or market downturns) so you learn from your mistakes.
+* **F&O Simulation:** Practice Call (CE) and Put (PE) options safely.
+
+## 🛠️ Tech Stack
+* **Frontend:** HTML, CSS, Vanilla JavaScript
+* **Backend:** Python (FastAPI)
+* **Database:** Google Firebase (Firestore & Authentication)
+* **Deployment:** Netlify (Frontend) & Render (Backend)
